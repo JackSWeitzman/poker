@@ -130,58 +130,24 @@ const STRUCT=`100/200
 200/400
 300/600
 400/800
+Break
 500/1000
-break 10
-600/1200
-700/1400
-800/1600
-900/1800
 1000/2000
-break 10
-1500/3000
 2000/4000
-2500/5000
-3000/6000
-4000/8000
-break 10
-5000/10000
-7500/15000
-10000/20000
-15000/30000
-20000/40000
-break 10
-25000/50000
-30000/60000
-40000/80000
-50000/100000
-60000/120000
-break 10
-70000/140000`;
-const OLD_STRUCT=`500/1000
-1000/2000
-1500/3000
-2000/4000
-break 10
 3000/6000
 4000/8000
 5000/10000
-6000/12000
-break 10
-8000/16000
 10000/20000
 15000/30000
 20000/40000
 30000/60000
 40000/80000
-50000/100000
-75000/150000
-100000/200000`;
+50000/100000`;
 const fresh=()=>({cfg:{buy:15,re:7.5,bBuy:5,bRe:2.5,third:15,split:60,min:15,stack:100000,maxRe:1,reUnl:true,struct:STRUCT},players:[],lvl:0,remMs:900000,running:false,endAt:0,warned:false,started:false,t0:0,locked:false,envs:[],all:[],draws:[],log:[],rseq:0,last:null,nid:1,bseq:0,elims:0,tEnd:0,claims:[],cid:1});
 let S,undo=[],AC,rt=[],bd=[],bsel=[],LC={k:'',v:[]};
 function load(){try{return JSON.parse(localStorage.getItem(KEY))}catch(e){return null}}
 function save(){if(SLAVE)return;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 S=Object.assign(fresh(),load()||{});S.cfg=Object.assign({},fresh().cfg,S.cfg);S.claims=S.claims||[];S.cid=S.cid||1;S.players.forEach(p=>{while(p.pd>0){S.claims.push({id:S.cid++,ks:[p.id],vic:''});p.pd--}});
-if(S.cfg.struct===OLD_STRUCT&&!S.started){S.cfg.struct=STRUCT;S.lvl=0;S.remMs=S.cfg.min*60000;save()}
 function levels(){const k=S.cfg.struct+S.cfg.min;if(LC.k!==k){LC={k,v:S.cfg.struct.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{let m=l.match(/^break\s*(\d+)?/i);if(m)return{brk:1,min:+m[1]||10};m=l.match(/^(\d+)\s*\/\s*(\d+)\s*(\d+)?/);return m?{sb:+m[1],bb:+m[2],min:+m[3]||S.cfg.min}:null}).filter(Boolean)}}return LC.v}
 /* sound */
 function ac(){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC}catch(e){return null}}
@@ -220,7 +186,7 @@ const nlist=a=>a.length<3?a.join(' & '):a.slice(0,-1).join(', ')+' & '+a[a.lengt
 function bustUI(id,keep){const p=P_(id),o=alive().filter(x=>x.id!=id);if(!keep)bsel=[];const n=bsel.length,nm=bsel.map(k=>P_(k).name),info=!n?(S.locked?'Pick who knocked them out.':'No knocker picked: just an elimination, no credit.'):S.locked?(n>1?esc(nlist(nm))+' split one bounty.':esc(nm[0])+' draws the bounty.'):esc(nlist(nm))+(n>1?' share':' gets')+' the elimination credit.';
 modal(`<h2>${esc(p.name)} is out</h2><p>Who knocked them out?<br><span class="mut sm">Pick everyone involved if it was a shared knockout. They split the bounty.</span></p><div class="chips">${o.map(x=>`<button class="kb ${bsel.includes(x.id)?'on':''}" aria-pressed="${bsel.includes(x.id)}" onclick="togK(${id},${x.id})">${esc(x.name)}</button>`).join('')}</div><p class="sm" style="min-height:1.4em">${info}</p><div class="row"><button class="g" ${n||!S.locked?'':'disabled'} onclick="bust(${id},bsel.slice())">Confirm</button><button onclick="closeM()">Cancel</button></div>`)}
 function togK(id,k){const i=bsel.indexOf(k);i<0?bsel.push(k):bsel.splice(i,1);bustUI(id,1)}
-function bust(id,ks){closeM();const p=P_(id),k=(ks||[]).map(P_).filter(Boolean);let cid=0;act(()=>{p.out=true;p.t=++S.bseq;S.elims++;k.forEach(x=>{x.el++;if(S.locked)x.el2=(x.el2||0)+1});if(S.locked&&k.length){cid=S.cid++;S.claims.push({id:cid,ks:k.map(x=>x.id),vic:p.name})}log(p.name+' eliminated'+(k.length?' by '+nlist(k.map(x=>x.name)):''));if(S.locked&&alive().length===1){pause();S.tEnd=Date.now()}});if(cid)drawUI(cid)}
+function bust(id,ks){closeM();const p=P_(id),k=(ks||[]).map(P_).filter(Boolean);let cid=0;act(()=>{p.out=true;p.t=++S.bseq;S.elims++;k.forEach(x=>{x.el++;if(S.locked)x.el2=Math.round(((x.el2||0)+1/k.length)*1e4)/1e4});if(S.locked&&k.length){cid=S.cid++;S.claims.push({id:cid,ks:k.map(x=>x.id),vic:p.name})}log(p.name+' eliminated'+(k.length?' by '+nlist(k.map(x=>x.name)):''));if(S.locked&&alive().length===1){pause();S.tEnd=Date.now()}});if(cid)drawUI(cid)}
 function drawUI(cid){const c=S.claims.find(x=>x.id==cid);if(!c||!S.envs.length)return;const ks=c.ks.map(P_).filter(Boolean),n=ks.length;modal(`<h2>${esc(nlist(ks.map(k=>k.name)))}: pick a bounty</h2>${n>1?`<p class="mut">Shared knockout${c.vic?' of '+esc(c.vic):''}: the bounty is split ${n} ways.</p>`:''}<button class="g" onclick="vdraw(${cid})">Random draw</button><p class="mut">Or choose an envelope yourself:</p><div class="chips">${S.envs.map((_,i)=>`<button class="pk" title="Envelope ${i+1}" aria-label="Envelope ${i+1}" onclick="pick(${cid})">✉</button>`).join('')}</div><div class="row"><button onclick="closeM()">Later</button></div>`)}
 function claim(cid,v,pk){closeM();const c=S.claims.find(x=>x.id==cid);if(!c||!S.envs.length)return;const ks=c.ks.map(P_).filter(Boolean);act(()=>{const cnt=S.envs.length,n=ks.length,tot=Math.round(v*100),base=Math.floor(tot/n),extra=tot-base*n;S.envs.splice(S.envs.indexOf(v),1);S.claims=S.claims.filter(x=>x.id!=cid);ks.forEach((k,j)=>{k.bw=Math.round(k.bw*100+base+(j<extra?1:0))/100});const nm=nlist(ks.map(k=>k.name));S.draws.push({n:nm,v,s:n});S.rseq++;S.last={n:nm,v,c:cnt,p:pk?1:0,s:n};log(nm+' drew '+E(v)+(n>1?' (split '+n+' ways)':''))});reveal(S.last)}
 const rnd=()=>S.envs[Math.floor(Math.random()*S.envs.length)];
@@ -237,30 +203,15 @@ function bdDel(i){bd.splice(i,1);bdShow()}
 function bdAdd(){const n=alive().length-1,k=bd.reduce((a,r)=>a+r.c,0),t=bd.reduce((a,r)=>a+cents(r.v)*r.c,0),rem=n-k;bd.push({v:rem>0?Math.max(0,Math.round((cents(bpot())-t)/100/rem*2)/2):0,c:1});bdShow()}
 function bdFill(even){bd=tiersOf(gen(even));bdShow()}
 function bdGo(){const n=alive().length-1,l=[];bd.forEach(r=>{for(let i=0;i<r.c;i++)l.push(Math.round(r.v*100)/100)});if(l.length!==n||l.reduce((a,v)=>a+cents(v),0)!==cents(bpot()))return;l.sort((a,b)=>b-a);act(()=>{S.locked=true;S.envs=[...l];S.all=[...l];log('Rebuys closed: '+l.length+' bounties set')});closeM()}
-function settleUI(){const po=payouts(),rows=S.players.map(p=>{const pl=place(p),pay=pl&&pl<=3?po[pl-1]:0,paid=S.cfg.buy+p.re*S.cfg.re;return{p,paid,pay,net:pay+p.bw-paid}}).sort((a,b)=>b.net-a.net);modal(`<h2>Settle up</h2><table><tr><th>Player</th><th>Paid in</th><th>Prize</th><th>Bounties</th><th>Net</th></tr>${rows.map(r=>`<tr><td>${esc(r.p.name)}</td><td>${E(r.paid)}</td><td>${E(r.pay)}</td><td>${E(r.p.bw)}</td><td class="${r.net>=0?'pos':'neg'}">${r.net>=0?'+':'−'}${E(Math.abs(r.net))}</td></tr>`).join('')}</table><p class="mut sm">Provisional until the tournament is over.</p><div class="row"><button onclick="closeM()">Close</button></div>`)}
+function settleUI(){const po=payouts(),rows=S.players.map(p=>{const pl=place(p),pay=pl&&pl<=3?po[pl-1]:0,paid=S.cfg.buy+p.re*S.cfg.re;return{p,paid,pay,net:pay+p.bw-paid}}).sort((a,b)=>b.net-a.net);modal(`<h2>Settle up</h2><table><tr><th>Player</th><th>Paid in</th><th>Prize</th><th>Bounties</th><th>Net</th></tr>${rows.map(r=>`<tr><td>${esc(r.p.name)}</td><td>${E(r.paid)}</td><td>${E(r.pay)}</td><td>${E(r.p.bw)}</td><td class="${r.net>=0?'pos':'neg'}">${r.net>=0?'+':'−'}${E(Math.abs(r.net))}</td></tr>`).join('')}</table><p class="mut sm">Provisional until the tournament is over.</p><div class="row">${S.locked&&alive().length===1?'<button class="g" onclick="exportUI()">Export for league</button>':''}<button onclick="closeM()">Close</button></div>`)}
+function exportUI(){let pr='Custom';try{const m=PR.find(x=>JSON.stringify(normCfg(x.cfg))===JSON.stringify(normCfg(S.cfg)));if(m)pr=m.name}catch(e){}const po=payouts(),d=new Date(S.tEnd||Date.now()),ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'),r2=v=>Math.round(v*100)/100,night={date:ds,preset:pr,players:S.players.map(p=>{const pl=place(p),prize=pl&&pl<=3?po[pl-1]:0,paid=S.cfg.buy+p.re*S.cfg.re;return{name:p.name,place:pl,rebuys:p.re,paid:r2(paid),prize:r2(prize),bounties:r2(p.bw),net:r2(prize+p.bw-paid),elims:p.el,hardElims:p.el2||0}}).sort((a,b)=>a.place-b.place),awards:[]},t=JSON.stringify(night,null,2);modal(`<h2>Export for league</h2><p class="mut sm">Copy this, then paste it into the "nights" list in league.json on GitHub (add a comma between nights). Awards: add entries like {"player":"Dan","label":"Bad beat","points":2}.</p><textarea id="ex" rows="14" readonly>${esc(t)}</textarea><div class="row"><button class="g" onclick="$('#ex').select();navigator.clipboard&&navigator.clipboard.writeText($('#ex').value);this.textContent='Copied'">Copy</button><button onclick="closeM()">Close</button></div>`)}
 /* presets */
 const NUMK=['buy','re','bBuy','bRe','third','split','min','stack'],PKEY='pokernight_presets_v1';
-const TURBO={buy:15,re:7.5,bBuy:5,bRe:2.5,third:15,split:60,min:10,stack:25000,maxRe:1,reUnl:false,struct:`250/500
-500/1000
-750/1500
-1000/2000
-1500/3000
-break 10
-2000/4000
-3000/6000
-4000/8000
-5000/10000
-6000/12000
-break 10
-8000/16000
-10000/20000
-15000/30000
-20000/40000`};
 const normCfg=c=>{const d=fresh().cfg,o={};c=c||{};for(const k of NUMK.concat('maxRe')){const v=Number(c[k]);o[k]=c[k]!==undefined&&c[k]!==''&&isFinite(v)?v:d[k]}o.reUnl=c.reUnl===undefined?d.reUnl:!!c.reUnl;o.struct=typeof c.struct==='string'?c.struct:d.struct;return o};
 const cleanPreset=x=>x&&typeof x.name==='string'&&x.name.trim()&&x.cfg&&typeof x.cfg.struct==='string'?{name:x.name.trim(),cfg:normCfg(x.cfg)}:null;
 let PR=[],DIR=null,dirNeed=false,fdOpen=false;
 function savePresets(){if(SLAVE)return;try{localStorage.setItem(PKEY,JSON.stringify(PR))}catch(e){}}
-(function(){let a=null;try{a=JSON.parse(localStorage.getItem(PKEY))}catch(e){}if(Array.isArray(a))PR=a.map(x=>{const p=cleanPreset(x);if(p&&x.file)p.file=x.file;return p}).filter(Boolean);else if(!SLAVE){PR=[{name:'Deep stack',cfg:normCfg(S.cfg)},{name:'Turbo',cfg:normCfg(TURBO)}];savePresets()}})();
+(function(){let a=null;try{a=JSON.parse(localStorage.getItem(PKEY))}catch(e){}if(Array.isArray(a))PR=a.map(x=>{const p=cleanPreset(x);if(p&&x.file)p.file=x.file;return p}).filter(Boolean);else if(!SLAVE){PR=[{name:'Hurleys',cfg:normCfg(S.cfg)}];savePresets()}})();
 const sumry=c=>E(c.buy)+' buy-in · '+c.min+' min levels · '+N(c.stack)+' chips · '+(c.reUnl?'unlimited rebuys':c.maxRe?c.maxRe+(c.maxRe==1?' rebuy':' rebuys'):'no rebuys');
 function readForm(){if(!$('#c_buy'))return{...S.cfg};const d={};for(const k of NUMK)d[k]=+$('#c_'+k).value;d.maxRe=Math.max(0,Math.floor(+$('#c_maxRe').value||0));d.reUnl=$('#c_reUnl').checked;d.struct=$('#c_struct').value;return d}
 function applyCfg(d,reset){act(()=>{S.cfg=normCfg(d);const L=levels();if(S.lvl>=L.length||(reset&&!S.started))S.lvl=0;if(!S.started&&L[S.lvl])S.remMs=L[S.lvl].min*60000})}
@@ -306,12 +257,12 @@ const winner=over?al[0]:null;
 const bl=cur.brk?L.slice(S.lvl+1).find(x=>!x.brk):cur,avg=al.length?Math.round(ent*(R.stack||100000)/al.length):0,abb=bl&&bl.bb&&avg?avg/bl.bb:0;
 const tiers=[...new Set(S.all)].sort((a,b)=>b-a);
 const names=[1,2,3].map(n=>S.players.find(p=>place(p)===n));
-$('#app').innerHTML=`<div class="bar"><div class="tot">Total time<b id="tot">0:00:00</b></div><span class="host bar"><button onclick="toggleTV()">TV mode (T)</button><button onclick="window.open(location.href.split('#')[0]+'#tv','tv','width=1280,height=720')">Open TV window</button><button onclick="settleUI()">Settle up</button><button onclick="setUI()">Settings</button></span></div>
+$('#app').innerHTML=`<div class="bar"><div class="tot">Total time<b id="tot">0:00:00</b></div><span class="host bar"><button onclick="toggleTV()">TV mode (T)</button><button onclick="window.open(location.href.split('#')[0]+'#tv','tv','width=1280,height=720')">Open TV window</button><button onclick="settleUI()">Settle up</button><button onclick="setUI()">Settings</button><a href="index.html" style="color:var(--gold);padding:7px 4px">League →</a></span></div>
 ${winner?`<div class="win-banner">${esc(winner.name)} wins ${E(po[0])}</div>`:''}
 <div class="grid"><div class="panel timer span"><div class="tmain"><div id="clock">00:00</div><div class="tinfo"><div class="lv">${cur.brk?'Break':'Level '+lvn}${S.running?'':'  ·  paused'}</div><div class="blinds">${cur.brk?'Break time':N(cur.sb||0)+' / '+N(cur.bb||0)}</div><div class="next">Next: ${nm(nx)}</div></div></div>
 <div class="ctl host"><button onclick="skip(-1)">◀ Prev</button><button onclick="adj(-60000)">−1 min</button><button class="g" onclick="toggle()">${S.running?'Pause':'Start'}</button><button onclick="adj(60000)">+1 min</button><button onclick="skip(1)">Next ▶</button><button onclick="doUndo()" ${undo.length?'':'disabled'}>Undo</button></div></div>
-<div class="panel"><div class="pl hd"><span>Player</span><span>Rebuys</span><span>Owes</span><span title="All eliminations">Elims</span><span title="Eliminations after rebuys closed">Post-rebuy</span><span>Bounties</span><span class="acts"></span></div>
-${S.players.map(p=>{const pl=place(p),mc=S.claims.filter(c=>c.ks.includes(p.id)),mx=maxRe();return`<div class="pl ${p.out?'out':''}"><span class="nm">${esc(p.name)}${pl&&(pl<=3)?' <span class="pip">'+ord(pl)+'</span>':p.out?' <span class="pip">out</span>':''}</span><span>${rbv(p)}</span><span>${E(R.buy+p.re*R.re)}</span><span>${p.el}</span><span>${p.el2||0}</span><span>${p.bw?E(p.bw):'-'}</span><span class="acts">${mc.length?`<button class="g" onclick="drawUI(${mc[0].id})">Draw${mc.length>1?' ×'+mc.length:''}</button>`:''}${!S.locked&&mx>0?`<button onclick="rebuy(${p.id})" ${p.re>=mx?'disabled title="No rebuys left"':''}>Rebuy</button>`:''}${!p.out&&al.length>1?`<button class="r" onclick="bustUI(${p.id})">Bust</button>`:''}${!S.locked?`<button onclick="rm(${p.id})">✕</button>`:''}</span></div>`}).join('')||'<p class="mut">No players yet. Add the first one below.</p>'}
+<div class="panel"><div class="pl hd"><span>Player</span><span>Rebuys</span><span>Owes</span><span title="All eliminations">Elims</span><span title="Eliminations after rebuys closed. A shared knockout is split between the knockers.">Hard Elims</span><span>Bounties</span><span class="acts"></span></div>
+${S.players.map(p=>{const pl=place(p),mc=S.claims.filter(c=>c.ks.includes(p.id)),mx=maxRe();return`<div class="pl ${p.out?'out':''}"><span class="nm">${esc(p.name)}${pl&&(pl<=3)?' <span class="pip">'+ord(pl)+'</span>':p.out?' <span class="pip">out</span>':''}</span><span>${rbv(p)}</span><span>${E(R.buy+p.re*R.re)}</span><span>${p.el}</span><span>${+(p.el2||0).toFixed(2)}</span><span>${p.bw?E(p.bw):'-'}</span><span class="acts">${mc.length?`<button class="g" onclick="drawUI(${mc[0].id})">Draw${mc.length>1?' ×'+mc.length:''}</button>`:''}${!S.locked&&mx>0?`<button onclick="rebuy(${p.id})" ${p.re>=mx?'disabled title="No rebuys left"':''}>Rebuy</button>`:''}${!p.out&&al.length>1?`<button class="r" onclick="bustUI(${p.id})">Bust</button>`:''}${!S.locked?`<button onclick="rm(${p.id})">✕</button>`:''}</span></div>`}).join('')||'<p class="mut">No players yet. Add the first one below.</p>'}
 <div class="host row"><input id="np" placeholder="Player name" onkeydown="if(event.key==='Enter')addP()" ${S.locked?'disabled':''}><button class="g" onclick="addP()" ${S.locked?'disabled':''}>Add player</button></div>
 <p class="host mut sm">${S.log.slice(0,2).map(esc).join('<br>')}</p></div>
 <div class="side"><div class="panel"><div class="stats"><div class="stat">Players left<b>${S.locked||S.elims?al.length+' / '+S.players.length:S.players.length}</b></div><div class="stat">Entries<b>${ent}</b></div><div class="stat">Eliminations<b>${S.elims}</b></div><div class="stat">Avg stack<b>${avg?N(avg):'-'}${abb?' <span class="bbv">('+N(abb>=10?Math.round(abb):Math.round(abb*10)/10)+' BB)</span>':''}</b></div></div></div>
