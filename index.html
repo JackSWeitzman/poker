@@ -6,45 +6,72 @@
 *{box-sizing:border-box}
 body{margin:0;padding:14px;min-height:100vh;color:var(--tx);font-family:"Trebuchet MS","Segoe UI",sans-serif;background:radial-gradient(ellipse at 50% -10%,#14604a,var(--bg) 65%)}
 h1,h2{font-family:Georgia,serif;color:var(--gold);margin:0 0 10px}
-main{max-width:900px;margin:0 auto}
+h3{color:var(--gold);font-size:14px;margin:14px 0 6px}
+main{max-width:1000px;margin:0 auto}
 .top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}
 a{color:var(--gold)}
-.panel{background:rgba(7,38,28,.82);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px;overflow-x:auto}
+.panel{background:rgba(7,38,28,.82);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
+.scroll{overflow-x:auto}
 table{width:100%;border-collapse:collapse}td,th{padding:7px 6px;text-align:left;border-bottom:1px solid #14543d;white-space:nowrap}
 th{color:var(--mut);font-size:13px;font-weight:400}
 td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .pos{color:#6fe3a0}.neg{color:#ff8b82}.mut{color:var(--mut)}.sm{font-size:13px}
 tr.dim td{opacity:.45}
 details{border-bottom:1px solid #14543d;padding:6px 0}summary{cursor:pointer}
+.sum{display:flex;flex-wrap:wrap;gap:6px 18px;margin:8px 0;font-size:14px}.sum b{color:var(--gold)}
+ul.tl{list-style:none;margin:0;padding:0;font-size:14px}ul.tl li{padding:3px 0;border-bottom:1px solid #14543d}ul.tl .t{color:var(--mut);display:inline-block;min-width:150px}
+details details{border:0;padding:0;margin-top:6px}
 </style></head><body><main>
 <div class="top"><h1>Poker League</h1><a href="poker-night.html">Tournament tool →</a></div>
 <div id="app"><p class="mut">Loading…</p></div>
-<p class="mut sm">Points: 1st = players + 5, 2nd = players + 2, 3rd = players, others = players beaten. Plus 1 point per elimination after rebuys closed (shared knockouts split the point), plus any awards.</p>
+<p class="mut sm">Points per game: 1st = players + 5, 2nd = players + 2, 3rd = players, others = players beaten. Plus 1 point for playing, 1 point per elimination after rebuys closed (shared knockouts split the point), plus any awards.</p>
 </main>
 <script>
 const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const m=v=>(v<0?'−':'')+'€'+Math.abs(v).toFixed(2);
-const f=v=>+v.toFixed(2);
+const f=v=>+v.toFixed(2),sg=v=>(v>=0?'+':'')+m(v);
+const list=a=>a.length<3?a.join(' & '):a.slice(0,-1).join(', ')+' & '+a[a.length-1];
+const clock=ms=>{const s=Math.max(0,Math.round(ms/60000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
 function placePts(pl,n){return pl===1?n+5:pl===2?n+2:pl===3?n:n-pl}
 function build(D){
   const al={};for(const k in D.aliases||{})(D.aliases[k]||[]).forEach(a=>al[a.toLowerCase()]=k);
-  const id=n=>al[n.toLowerCase()]||n,P={},nights=[];
-  for(const N of D.nights){
-    const n=N.players.length,rows=N.players.map(p=>{const aw=(N.awards||[]).filter(a=>id(a.player)===id(p.name)).reduce((s,a)=>s+(+a.points||0),0),pp=placePts(p.place,n),pts=pp+p.hardElims+aw;
-      return{name:id(p.name),place:p.place,pts,net:p.net,he:p.hardElims}});
-    nights.push({date:N.date,preset:N.preset,rows});
-    for(const r of rows){const s=P[r.name]=P[r.name]||{name:r.name,nights:0,pts:0,net:0,wins:0,he:0};s.nights++;s.pts+=r.pts;s.net+=r.net;s.he+=r.he;if(r.place===1)s.wins++}
+  const id=n=>al[n.toLowerCase()]||n,P={},games=[];
+  for(const N of (D.games||D.nights||[])){
+    const n=N.players.length,rows=N.players.map(p=>{
+      const aw=(N.awards||[]).filter(a=>id(a.player)===id(p.name)).reduce((s,a)=>s+(+a.points||0),0),pp=placePts(p.place,n),he=p.hardElims||0,pts=pp+he+1+aw;
+      return{...p,name:id(p.name),pp,he,aw,pts}});
+    games.push({...N,rows,id});
+    for(const r of rows){const s=P[r.name]=P[r.name]||{name:r.name,games:0,pts:0,net:0,wins:0,he:0};s.games++;s.pts+=r.pts;s.net+=r.net;s.he+=r.he;if(r.place===1)s.wins++}
   }
-  const S=D.settings||{},need=Math.max(S.minNights||3,Math.ceil((S.minShare||.5)*nights.length));
-  const all=Object.values(P).map(p=>({...p,ppn:p.pts/p.nights,q:p.nights>=need}));
-  all.sort((a,b)=>b.q-a.q||(b.q?b.ppn-a.ppn:b.pts-a.pts));
-  return{all,nights,need}
+  const S=D.settings||{},need=Math.max(S.minGames||S.minNights||3,Math.ceil((S.minShare||.5)*games.length));
+  const all=Object.values(P).map(p=>({...p,ppg:p.pts/p.games,q:p.games>=need}));
+  all.sort((a,b)=>b.q-a.q||(b.q?b.ppg-a.ppg:b.pts-a.pts));
+  return{all,games,need}
+}
+function timeline(G){
+  const ev=G.events||[];if(!ev.length)return'';
+  const t0=G.startedAt?Date.parse(G.startedAt):ev[0].at,id=G.id,L=[];
+  for(const e of ev){
+    let s='';
+    if(e.type==='bust')s=`<b>${esc(id(e.p))}</b> out${e.by&&e.by.length?', knocked out by '+esc(list(e.by.map(id))):''}${e.hard?'':' <span class="mut">(before rebuys closed)</span>'}`;
+    else if(e.type==='rebuy')s=`${esc(id(e.p))} rebuys`;
+    else if(e.type==='rebuysClosed')s='Rebuys closed';
+    else if(e.type==='bounty')s=`${esc(list(e.by.map(id)))} drew ${m(e.v)}${e.split>1?' (split '+e.split+' ways)':''}`;
+    else continue;
+    L.push(`<li><span class="t">${clock(e.at-t0)} · ${e.lvl?'L'+e.lvl+' '+esc(e.blinds):'Break'}</span>${s}</li>`)
+  }
+  return`<details><summary class="sm mut">Timeline</summary><ul class="tl">${L.join('')}</ul></details>`
+}
+function gameHTML(G){
+  const rows=G.rows,aw=(G.awards||[]),w=rows.find(r=>r.place===1);
+  const sum=[['Players',rows.length],['Entries',G.entries??rows.length],['Prize pool',G.prizePool!=null?m(G.prizePool):null],['Bounty pool',G.bountyPool!=null?m(G.bountyPool):null],['Length',G.durationMin!=null?Math.floor(G.durationMin/60)+'h '+String(G.durationMin%60).padStart(2,'0')+'m':null],['Winner',w?w.name:null]].filter(x=>x[1]!=null).map(([k,v])=>`<span>${k}: <b>${esc(v)}</b></span>`).join('');
+  return`<div class="sum">${sum}</div><div class="scroll"><table><tr><th>Place</th><th>Player</th><th class="n">Points</th><th class="n" title="Points for finishing position">Place pts</th><th class="n" title="Points for eliminations after rebuys closed">Elim pts</th><th class="n" title="1 point for playing">Played</th><th class="n">Awards</th><th class="n">Rebuys</th><th class="n">Paid in</th><th class="n">Prize</th><th class="n">Bounties</th><th class="n">PNL</th><th class="n" title="All eliminations">Elims</th><th class="n" title="Eliminations before rebuys closed">Early</th><th class="n" title="Eliminations after rebuys closed">Late</th></tr>${rows.map(x=>`<tr><td>${x.place}</td><td><b>${esc(x.name)}</b></td><td class="n"><b>${f(x.pts)}</b></td><td class="n">${f(x.pp)}</td><td class="n">${f(x.he)}</td><td class="n">1</td><td class="n">${f(x.aw)}</td><td class="n">${x.rebuys??'–'}</td><td class="n">${x.paid!=null?m(x.paid):'–'}</td><td class="n">${x.prize!=null?m(x.prize):'–'}</td><td class="n">${x.bounties!=null?m(x.bounties):'–'}</td><td class="n ${x.net>=0?'pos':'neg'}">${sg(x.net)}</td><td class="n">${x.elims??'–'}</td><td class="n">${x.preElims??'–'}</td><td class="n">${x.postElims??'–'}</td></tr>`).join('')}</table></div>${aw.length?`<h3>Awards</h3><p class="sm">${aw.map(a=>esc(G.id(a.player))+': '+esc(a.label||'Award')+' (+'+(+a.points||0)+')').join(' · ')}</p>`:''}${timeline(G)}`
 }
 fetch('league.json',{cache:'no-cache'}).then(r=>r.json()).then(D=>{
-  const{all,nights,need}=build(D);
-  if(!nights.length){$('#app').innerHTML='<div class="panel"><h2>No nights yet</h2><p class="mut">Finish a tournament, use Settle up → Export for league, and paste the result into league.json.</p></div>';return}
+  const{all,games,need}=build(D);
+  if(!games.length){$('#app').innerHTML='<div class="panel"><h2>No games yet</h2><p class="mut">Finish a tournament, use Settle up → Export for league, and paste the result into the "games" list in league.json.</p></div>';return}
   let r=0;
-  $('#app').innerHTML=`<div class="panel"><h2>Standings</h2><table><tr><th>#</th><th>Player</th><th class="n">Pts/night</th><th class="n">Points</th><th class="n">Nights</th><th class="n">Wins</th><th class="n" title="Eliminations after rebuys closed; shared knockouts are split">Hard Elims</th><th class="n">PNL</th></tr>${all.map(p=>`<tr class="${p.q?'':'dim'}"><td>${p.q?++r:'–'}</td><td><b>${esc(p.name)}</b></td><td class="n">${f(p.ppn)}</td><td class="n">${f(p.pts)}</td><td class="n">${p.nights}</td><td class="n">${p.wins}</td><td class="n">${f(p.he)}</td><td class="n ${p.net>=0?'pos':'neg'}">${p.net>=0?'+':''}${m(p.net)}</td></tr>`).join('')}</table><p class="mut sm">Ranked by points per night. Play at least ${need} night${need==1?'':'s'} to qualify; greyed-out players have not yet.</p></div>
-<div class="panel"><h2>Nights</h2>${nights.slice().reverse().map(n=>`<details><summary>${esc(n.date)} <span class="mut">· ${esc(n.preset||'')} · ${n.rows.length} players</span></summary><table><tr><th>Place</th><th>Player</th><th class="n">Points</th><th class="n">PNL</th></tr>${n.rows.map(x=>`<tr><td>${x.place}</td><td>${esc(x.name)}</td><td class="n">${f(x.pts)}</td><td class="n ${x.net>=0?'pos':'neg'}">${x.net>=0?'+':''}${m(x.net)}</td></tr>`).join('')}</table></details>`).join('')}</div>`
+  $('#app').innerHTML=`<div class="panel"><h2>Standings</h2><div class="scroll"><table><tr><th>#</th><th>Player</th><th class="n">Pts/game</th><th class="n">Points</th><th class="n">Games</th><th class="n">Wins</th><th class="n" title="Eliminations after rebuys closed; shared knockouts are split">Hard Elims</th><th class="n">PNL</th></tr>${all.map(p=>`<tr class="${p.q?'':'dim'}"><td>${p.q?++r:'–'}</td><td><b>${esc(p.name)}</b></td><td class="n">${f(p.ppg)}</td><td class="n">${f(p.pts)}</td><td class="n">${p.games}</td><td class="n">${p.wins}</td><td class="n">${f(p.he)}</td><td class="n ${p.net>=0?'pos':'neg'}">${sg(p.net)}</td></tr>`).join('')}</table></div><p class="mut sm">Ranked by points per game. Play at least ${need} game${need==1?'':'s'} to qualify; greyed-out players have not yet.</p></div>
+<div class="panel"><h2>Games</h2>${games.slice().reverse().map(G=>`<details><summary>${esc(G.date)} <span class="mut">· ${esc(G.preset||'')} · ${G.rows.length} players · won by ${esc((G.rows.find(x=>x.place===1)||{}).name||'?')}</span></summary>${gameHTML(G)}</details>`).join('')}</div>`
 }).catch(e=>{$('#app').innerHTML='<div class="panel"><p class="neg">Could not load league.json. This page needs to be served from GitHub Pages or a local server, not opened as a file.</p></div>'});
 </script></body></html>
