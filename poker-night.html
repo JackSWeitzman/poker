@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Poker Night</title>
+<style>
+:root{--bg:#06231a;--panel:#0b3326;--line:#1f6a4e;--gold:#e3b94f;--chip:#d8443a;--tx:#f1f5ef;--mut:#86b39e}
+*{box-sizing:border-box}
+html{height:100%}
+body{margin:0;padding:clamp(8px,1.6vh,14px);height:100vh;height:100dvh;display:flex;flex-direction:column;overflow-x:hidden;overflow-y:auto;color:var(--tx);font-family:"Trebuchet MS","Segoe UI",sans-serif;background:radial-gradient(ellipse at 50% -10%,#14604a,var(--bg) 65%)}
+h1,h2,.blinds,.rvn,.card{font-family:Georgia,"Palatino Linotype",serif}
+h2{color:var(--gold);margin:0 0 10px}
+button{background:#14543d;color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:7px 12px;font:inherit;cursor:pointer}
+button:hover{background:#1c7253}button:focus-visible,input:focus-visible{outline:2px solid var(--gold)}
+button.g{background:var(--gold);color:#2a1d00;border-color:var(--gold);font-weight:700}
+button.r{background:#6e2520;border-color:#b3443b}button:disabled{opacity:.35;cursor:default}
+input,textarea{background:#05241a;color:var(--tx);border:1px solid var(--line);border-radius:6px;padding:7px;font:inherit}
+.bar{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:1.7fr 1fr;gap:12px}.span{grid-column:1/3}
+.panel{background:rgba(7,38,28,.82);border:1px solid var(--line);border-radius:12px;padding:14px}
+.timer{text-align:center}
+.lv{color:var(--mut);font-size:max(13px,calc(var(--c)*.12))}
+#clock{font:800 var(--c)/1 "Trebuchet MS",sans-serif;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+#clock.warn{color:var(--chip)}
+.blinds{font-weight:700;font-size:max(24px,calc(var(--c)*.38));white-space:nowrap;line-height:1.05;color:var(--gold)}
+.next{color:var(--mut);font-size:max(13px,calc(var(--c)*.12));margin-top:2px}
+.ctl{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:clamp(4px,1vh,10px)}.ctl button{padding:5px 10px;font-size:13px}
+.win-banner{background:var(--gold);color:#2a1d00;font:700 clamp(20px,min(4vw,6vh),54px) Georgia,serif;text-align:center;border-radius:12px;padding:10px;margin-bottom:12px}
+.pl{display:grid;grid-template-columns:1.4fr 1fr 1fr .6fr .8fr .8fr 230px;gap:8px;align-items:center;padding:6px 4px;border-bottom:1px solid #14543d;font-size:clamp(13px,min(1.7vw,2.6vh),24px)}
+.pl.hd{color:var(--mut);font-size:13px}.pl.out{opacity:.45}.pl .nm{font-weight:700}
+.pl .acts{display:flex;gap:5px;justify-content:flex-end}.pl .acts button{padding:4px 8px;font-size:13px}
+.pip{color:var(--mut)}
+.st{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #14543d;font-size:clamp(13px,min(1.7vw,2.6vh),24px)}.st b{color:var(--gold)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:#14543d;border:1px solid var(--gold);color:var(--gold);border-radius:999px;padding:3px 10px;font:700 clamp(12px,min(1.5vw,2.4vh),20px) Georgia,serif}
+.chip.gone{opacity:.3;text-decoration:line-through;border-color:var(--line)}
+.mut{color:var(--mut)}.sm{font-size:13px}
+body.tv .host{display:none!important}body.tv .acts{display:none}body.tv .pl{grid-template-columns:1.4fr 1fr 1fr .6fr .8fr .8fr}
+#m,#rv{position:fixed;inset:0;display:none;z-index:50;align-items:center;justify-content:center}
+#m.on{display:flex;background:rgba(0,0,0,.7)}
+.mb{background:var(--panel);border:1px solid var(--gold);border-radius:14px;padding:20px;max-width:640px;width:92%;max-height:90vh;overflow:auto}
+.fm{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}.fm label,.mb>label{display:flex;flex-direction:column;font-size:13px;color:var(--mut);gap:3px}
+.mb textarea{width:100%}.row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+table{width:100%;border-collapse:collapse}td,th{padding:6px;text-align:left;border-bottom:1px solid #14543d}.pos{color:var(--grn,#6fe3a0)}.neg{color:#ff8b82}
+#rv.on{display:flex;flex-direction:column;background:radial-gradient(circle,#0d3a2b,#020b07 75%);overflow:hidden}
+.rvn{font-size:clamp(22px,min(4.5vw,7vh),64px);color:var(--gold);margin-bottom:3vh}.rvv{font:700 clamp(24px,min(5vw,8vh),72px) Georgia,serif;margin-top:4vh}
+.skip{position:absolute;top:16px;right:16px}
+#fan{position:relative;width:min(80vw,900px);height:min(260px,32vh)}
+.env{width:clamp(90px,min(16vw,24vh),240px);aspect-ratio:3/2;background:linear-gradient(135deg,#f5e6b8,#d7b358);border-radius:8px;position:relative;box-shadow:0 10px 30px #000a}
+.flap{position:absolute;left:0;right:0;top:0;height:58%;background:#bf9a3c;clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:top;transition:transform 1.2s ease-in-out;z-index:3}
+.sh{position:absolute;left:50%;top:50%;margin:-60px 0 0 -90px;width:150px;animation:shuf .8s ease-in-out infinite alternate;animation-delay:calc(var(--i)*-.13s)}
+@keyframes shuf{0%{transform:translate(calc((var(--i) - var(--n)/2)*55px),0) rotate(calc((var(--i) - 4)*4deg))}50%{transform:translate(calc((var(--n)/2 - var(--i))*70px),-70px) rotate(9deg)}100%{transform:translate(calc((var(--i) - var(--n)/2)*-35px),35px) rotate(-7deg)}}
+/* One continuous build -> release. Shake = oscillation (--osc, 3 speeds) x strength (--amp, rises then dies away);
+   swell and glow ramp up to the same peak, then ease back down while the flap opens, so nothing snaps at the handoff. */
+@property --osc{syntax:'<number>';inherits:false;initial-value:0}
+@property --amp{syntax:'<number>';inherits:false;initial-value:0}
+.big{translate:0 16vh;width:clamp(180px,min(34vw,52vh),520px);transform:translateX(calc(var(--osc)*var(--amp)*7px)) rotate(calc(var(--osc)*var(--amp)*1.3deg));transition:box-shadow .9s ease,filter .6s ease;animation:pop .5s ease-out,osc .16s linear .5s 5,osc .11s linear 1.3s 8,osc .07s linear 2.18s 30,amp 3.75s linear .5s,swell 4s .5s,glow 6s .5s}
+@keyframes pop{from{transform:scale(.2) rotate(-10deg);opacity:0}to{transform:scale(1) rotate(0deg)}}
+@keyframes osc{0%{--osc:0}25%{--osc:1}75%{--osc:-1}100%{--osc:0}}
+@keyframes amp{0%{--amp:.3;animation-timing-function:ease-in}80%{--amp:1;animation-timing-function:ease-out}100%{--amp:0}}
+@keyframes swell{0%{scale:1;animation-timing-function:cubic-bezier(.5,0,.3,1)}75%{scale:1.12;animation-timing-function:cubic-bezier(.4,0,.2,1)}100%{scale:1}}
+@keyframes glow{0%{box-shadow:0 10px 30px #000a;animation-timing-function:cubic-bezier(.5,0,.3,1)}50%{box-shadow:0 0 90px 18px rgba(255,235,170,.5);animation-timing-function:ease-in-out}100%{box-shadow:0 10px 30px #000a}}
+.card{position:absolute;left:8%;right:8%;top:8%;bottom:8%;background:#fff;color:#122;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:clamp(26px,min(6.5vw,10vh),100px);opacity:0;transition:opacity .3s .5s;z-index:1}
+.big.open .flap{transform:rotateX(180deg);z-index:0}.big.open .card{opacity:1;animation:draw 3.4s cubic-bezier(.45,.05,.3,1) .5s both}
+.big.win{box-shadow:0 0 140px 40px rgba(227,185,79,.7)}.big.zero{filter:grayscale(.8)}
+.cf{position:absolute;top:-30px;left:calc(var(--x)*1%);width:10px;height:16px;background:var(--c);animation:fall var(--d) linear forwards}
+@keyframes fall{to{transform:translateY(115vh) rotate(720deg)}}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.span{grid-column:1}.pl{grid-template-columns:1fr 1fr}}
+@keyframes draw{0%{transform:none}100%{transform:translateY(-16vh) scale(1.75)}}
+.num{opacity:0;transition:opacity .8s}.big.rev .num{opacity:1}
+.big.win .card{box-shadow:0 0 80px 20px rgba(227,185,79,.8)}
+.rvn{position:absolute;top:6vh;left:0;right:0;text-align:center;margin:0}
+.rvv{position:absolute;bottom:7vh;left:0;right:0;text-align:center;margin:0}
+#fan.hush{opacity:0;transition:opacity .6s}
+#rv::before{content:'';position:absolute;inset:0;background:radial-gradient(circle,transparent 25%,#000 100%);opacity:0;transition:opacity 4s;pointer-events:none}
+#rv.tense::before{opacity:.9}
+.big.peek .flap{animation:peek 1s}
+@keyframes peek{0%{transform:none}30%,60%{transform:rotateX(45deg)}100%{transform:none}}
+@media(prefers-reduced-motion:reduce){.sh,.big{animation:none}}
+#app{flex:1 0 auto;display:flex;flex-direction:column}
+.grid{flex:1 0 auto;grid-template-rows:minmax(22vh,1fr) auto}
+.bar{margin-bottom:clamp(4px,1vh,10px)}
+.timer{padding:clamp(6px,1vh,12px) 14px;container-type:size;display:flex;flex-direction:column;justify-content:center;align-items:center;--c:min(64cqh,14cqw)}
+.tmain{display:flex;align-items:center;justify-content:center;gap:clamp(16px,4vw,64px);flex-wrap:wrap}
+.tinfo{text-align:left}
+.tot{color:var(--mut);font-size:clamp(13px,min(1.6vw,2.6vh),24px);white-space:nowrap;margin:0 8px 0 auto}.tot b{color:var(--gold);font:700 1.5em Georgia,serif;font-variant-numeric:tabular-nums;margin-left:4px}
+.side{display:flex;flex-direction:column;gap:12px;min-height:0}
+.pods{flex:1}
+.stats{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 18px}
+.stat{display:flex;flex-direction:column;font-size:clamp(12px,min(1.4vw,2.2vh),20px);color:var(--mut)}
+.bbv{color:var(--mut);font-weight:400;font-size:.75em}.stat b{white-space:nowrap;color:var(--gold);font-size:clamp(15px,min(1.9vw,3vh),28px)}
+.hh{font:700 clamp(15px,min(1.8vw,2.8vh),24px) Georgia,serif;color:var(--gold);margin:0 0 6px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.pod{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pc{background:#05241a;border:1px solid var(--line);border-radius:8px;padding:6px 8px;text-align:center;min-width:0;font-size:clamp(13px,min(1.7vw,2.6vh),24px)}
+.pc:first-child{border-color:var(--gold)}
+.pc small{display:block;color:var(--mut);font-size:.75em}
+.pc .pn{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-height:1.2em}
+.pc b{color:var(--gold)}
+.sep{border-top:1px solid #14543d;margin-top:10px;padding-top:10px}
+.brow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+@media(max-width:800px),(max-height:520px) and (max-width:800px){
+ html,body{height:auto}body{overflow:auto;display:block;min-height:100vh}
+ #app{display:block}.grid{display:grid;grid-template-rows:none}.side{margin-top:0}
+ .tmain{flex-direction:column;gap:0}.tinfo{text-align:center}
+ .timer{container-type:normal;--c:22vw}
+ #clock{font-size:clamp(70px,22vw,200px)!important}.blinds{font-size:clamp(30px,10vw,90px)!important}
+}
+.pk{width:clamp(54px,8vw,76px);aspect-ratio:3/2;padding:0;font-size:clamp(22px,3vw,30px);line-height:1;color:#5a4210;background:linear-gradient(135deg,#f5e6b8,#d7b358);border:1px solid #bf9a3c;box-shadow:0 4px 10px #0008;transition:transform .12s}
+.pk:hover{background:linear-gradient(135deg,#fff2c9,#e6c164);transform:translateY(-4px) rotate(-3deg)}
+
+.pips{display:inline-flex;gap:5px;align-items:center;vertical-align:middle}
+.pp{width:.78em;height:.78em;border-radius:50%;border:2px solid var(--gold);display:inline-block}.pp.on{background:var(--gold)}
+.rb{display:inline-block;background:#14543d;border:1px solid var(--gold);color:var(--gold);border-radius:999px;padding:1px 9px;font-weight:700}
+.kb{padding:8px 14px}.kb.on{background:var(--gold);color:#2a1d00;border-color:var(--gold);font-weight:700}
+.bd{display:flex;flex-direction:column;gap:8px;margin:10px 0}.bdr{display:flex;align-items:center;gap:10px}.bdr .x{color:var(--mut)}
+.bde{display:flex;align-items:center;gap:6px;font-size:18px;color:var(--gold)}.bde input{width:96px;font-size:18px}
+.stp{display:inline-flex;align-items:center;gap:10px;background:#05241a;border:1px solid var(--line);border-radius:8px;padding:2px}.stp b{min-width:1.6em;text-align:center;font-size:18px}.stp button{padding:2px 12px;font-size:18px}
+.bds{margin:8px 0 4px;font-size:15px;line-height:1.5}
+.rbx{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px}.rbx label{display:flex;flex-direction:column;font-size:13px;color:var(--mut);gap:3px}.rbx label.chk{flex-direction:row;align-items:center;gap:8px;color:var(--tx);font-size:14px;padding-bottom:8px}.rbx input:disabled{opacity:.4}
+.pre{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px;background:rgba(5,36,26,.5)}
+.prow{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid #14543d}.prow>div{flex:1;min-width:0}.prow.on b{color:var(--gold)}
+.tag{background:var(--gold);color:#2a1d00;border-radius:999px;padding:0 8px;font-size:11px;font-weight:700;margin-left:8px}
+.pre details{margin-top:8px}.pre summary{cursor:pointer;color:var(--mut);font-size:13px}
+</style></head><body>
+<div id="app"></div>
+<div id="m"><div class="mb"></div></div><div id="rv"></div>
+<script>
+const $=s=>document.querySelector(s),KEY='pokernight_v1',SLAVE=location.hash==='#tv';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const E=n=>'€'+(Number.isInteger(n)?n:n.toFixed(2)),N=n=>n.toLocaleString('en-IE');
+const STRUCT=`100/200
+200/400
+300/600
+400/800
+500/1000
+break 10
+600/1200
+700/1400
+800/1600
+900/1800
+1000/2000
+break 10
+1500/3000
+2000/4000
+2500/5000
+3000/6000
+4000/8000
+break 10
+5000/10000
+7500/15000
+10000/20000
+15000/30000
+20000/40000
+break 10
+25000/50000
+30000/60000
+40000/80000
+50000/100000
+60000/120000
+break 10
+70000/140000`;
+const OLD_STRUCT=`500/1000
+1000/2000
+1500/3000
+2000/4000
+break 10
+3000/6000
+4000/8000
+5000/10000
+6000/12000
+break 10
+8000/16000
+10000/20000
+15000/30000
+20000/40000
+30000/60000
+40000/80000
+50000/100000
+75000/150000
+100000/200000`;
+const fresh=()=>({cfg:{buy:15,re:7.5,bBuy:5,bRe:2.5,third:15,split:60,min:15,stack:100000,maxRe:1,reUnl:true,struct:STRUCT},players:[],lvl:0,remMs:900000,running:false,endAt:0,warned:false,started:false,t0:0,locked:false,envs:[],all:[],draws:[],log:[],rseq:0,last:null,nid:1,bseq:0,elims:0,tEnd:0,claims:[],cid:1});
+let S,undo=[],AC,rt=[],bd=[],bsel=[],LC={k:'',v:[]};
+function load(){try{return JSON.parse(localStorage.getItem(KEY))}catch(e){return null}}
+function save(){if(SLAVE)return;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+S=Object.assign(fresh(),load()||{});S.cfg=Object.assign({},fresh().cfg,S.cfg);S.claims=S.claims||[];S.cid=S.cid||1;S.players.forEach(p=>{while(p.pd>0){S.claims.push({id:S.cid++,ks:[p.id],vic:''});p.pd--}});
+if(S.cfg.struct===OLD_STRUCT&&!S.started){S.cfg.struct=STRUCT;S.lvl=0;S.remMs=S.cfg.min*60000;save()}
+function levels(){const k=S.cfg.struct+S.cfg.min;if(LC.k!==k){LC={k,v:S.cfg.struct.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{let m=l.match(/^break\s*(\d+)?/i);if(m)return{brk:1,min:+m[1]||10};m=l.match(/^(\d+)\s*\/\s*(\d+)\s*(\d+)?/);return m?{sb:+m[1],bb:+m[2],min:+m[3]||S.cfg.min}:null}).filter(Boolean)}}return LC.v}
+/* sound */
+function ac(){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC}catch(e){return null}}
+['pointerdown','keydown','touchstart'].forEach(ev=>addEventListener(ev,()=>{ac()},{passive:true}));
+function tone(f,t,d,ty='sine',v=.15){try{const A=ac();if(!A)return;const o=A.createOscillator(),g=A.createGain(),T=A.currentTime+t;o.type=ty;o.frequency.value=f;g.gain.setValueAtTime(v,T);g.gain.exponentialRampToValueAtTime(.0001,T+d);o.connect(g);g.connect(A.destination);o.start(T);o.stop(T+d+.05)}catch(e){}}
+function bell(f,t,d,v=.2){try{const A=ac();if(!A)return;const T=A.currentTime+t;[[1,1,1],[2.76,.3,.6],[5.4,.1,.3]].forEach(([m,a,l])=>{const o=A.createOscillator(),g=A.createGain();o.type='sine';o.frequency.value=f*m;g.gain.setValueAtTime(.0001,T);g.gain.linearRampToValueAtTime(v*a,T+.012);g.gain.exponentialRampToValueAtTime(.0001,T+d*l);o.connect(g);g.connect(A.destination);o.start(T);o.stop(T+d*l+.05)})}catch(e){}}
+/* soft two-note chime: rising = blinds up, falling = break, single = one minute left */
+const beep=k=>k==1?bell(988,0,.8,.14):k==2?(bell(784,0,1.5,.2),bell(523,.35,2.2,.2)):(bell(659,0,1.6,.22),bell(880,.32,2.4,.22));
+const drum=()=>{for(let i=0;i<26;i++)tone(90+i*3,i*.05,.07,'triangle',.2)};
+/* timer */
+const rem=()=>S.running?Math.max(0,S.endAt-Date.now()):S.remMs;
+function paint(){const r=rem(),s=Math.ceil(r/1000),el=$('#clock');if(!el)return;el.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');const c=levels()[S.lvl]||{};el.classList.toggle('warn',S.running&&r<=60000&&!c.brk);document.title=el.textContent+' · Poker Night';if(S.started&&!S.t0&&!SLAVE){S.t0=Date.now();save()}const tt=$('#tot');if(tt){const e=S.t0?Math.max(0,Math.floor(((S.tEnd||Date.now())-S.t0)/1000)):0;tt.textContent=Math.floor(e/3600)+':'+String(Math.floor(e/60)%60).padStart(2,'0')+':'+String(e%60).padStart(2,'0')}}
+function advance(){const L=levels();if(S.lvl>=L.length-1){S.running=false;S.remMs=0;beep(3);save();return render()}S.lvl++;S.remMs=L[S.lvl].min*60000;S.warned=false;if(S.running)S.endAt=Date.now()+S.remMs;beep(L[S.lvl].brk?2:3);save();render()}
+function toggle(){if(S.running){S.remMs=rem();S.running=false}else{S.endAt=Date.now()+S.remMs;S.running=true;S.started=true;if(!S.t0)S.t0=Date.now()}save();render()}
+function pause(){if(S.running){S.remMs=rem();S.running=false}}
+function adj(ms){const r=Math.max(0,rem()+ms);S.remMs=r;if(S.running)S.endAt=Date.now()+r;S.warned=false;save();paint()}
+function skip(d){const L=levels();S.lvl=Math.min(L.length-1,Math.max(0,S.lvl+d));S.remMs=L[S.lvl].min*60000;if(S.running)S.endAt=Date.now()+S.remMs;S.warned=false;save();render()}
+setInterval(()=>{if(!SLAVE&&S.running){const r=S.endAt-Date.now(),c=levels()[S.lvl]||{};if(r<=0)advance();else if(r<=60000&&!S.warned&&!c.brk&&c.min>1){S.warned=true;beep(1);save()}}paint()},250);
+/* money */
+const alive=()=>S.players.filter(p=>!p.out),reb=()=>S.players.reduce((a,p)=>a+p.re,0),maxRe=()=>S.cfg.reUnl?Infinity:Math.max(0,S.cfg.maxRe|0);
+const pool=()=>S.players.length*(S.cfg.buy-S.cfg.bBuy)+reb()*(S.cfg.re-S.cfg.bRe);
+const bpot=()=>S.players.length*S.cfg.bBuy+reb()*S.cfg.bRe;
+function payouts(){const P=pool(),n=S.players.length,t=n>=3?Math.min(S.cfg.third,P):0,R=P-t,s=n>=2?Math.round(R*(100-S.cfg.split)/100):0;return[R-s,s,t]}
+function place(p){if(!S.locked)return null;if(!p.out)return alive().length===1?1:null;const o=S.players.filter(x=>x.out).sort((a,b)=>b.t-a.t);return alive().length+o.indexOf(p)+1}
+const ord=n=>n+(['th','st','nd','rd'][n>3?0:n]||'th');
+function gen(even){const n=alive().length-1,P=bpot();if(n<1)return[];const w=[];if(!even){if(n>=3)w.push(0);if(n>=2)w.push(6);if(n>=5)w.push(3,3)}while(w.length<n)w.push(even?1:1+Math.random()*1.5);const U=Math.round(P*2),sum=w.reduce((a,b)=>a+b,0),raw=w.map(x=>x/sum*U),fl=raw.map(Math.floor);let left=U-fl.reduce((a,b)=>a+b,0);raw.map((r,i)=>[r-fl[i],i]).sort((a,b)=>b[0]-a[0]).slice(0,left).forEach(([,i])=>fl[i]++);return fl.map(x=>x/2).sort((a,b)=>b-a)}
+/* actions */
+const P_=id=>S.players.find(x=>x.id==id),log=t=>S.log.unshift(t);
+function snap(){const{lvl,remMs,running,endAt,warned,started,t0,...r}=S;undo.push(JSON.stringify(r));if(undo.length>40)undo.shift()}
+function act(f){snap();f();save();render()}
+function doUndo(){if(!undo.length)return;S={...S,...JSON.parse(undo.pop())};save();render()}
+function addP(){const i=$('#np'),n=i.value.trim();if(!n||S.locked)return;act(()=>{S.players.push({id:S.nid++,name:n,re:0,out:false,el:0,el2:0,bw:0,t:0});log(n+' joins')});$('#np').focus()}
+function rebuy(id){const p=P_(id);if(S.locked||p.re>=maxRe())return;act(()=>{p.re++;p.out=false;log(p.name+' rebuys ('+p.re+')')})}
+function rm(id){const p=P_(id);if(confirm('Remove '+p.name+'?'))act(()=>{S.players=S.players.filter(x=>x.id!=id)})}
+const nlist=a=>a.length<3?a.join(' & '):a.slice(0,-1).join(', ')+' & '+a[a.length-1];
+function bustUI(id,keep){const p=P_(id),o=alive().filter(x=>x.id!=id);if(!keep)bsel=[];const n=bsel.length,nm=bsel.map(k=>P_(k).name),info=!n?(S.locked?'Pick who knocked them out.':'No knocker picked: just an elimination, no credit.'):S.locked?(n>1?esc(nlist(nm))+' split one bounty.':esc(nm[0])+' draws the bounty.'):esc(nlist(nm))+(n>1?' share':' gets')+' the elimination credit.';
+modal(`<h2>${esc(p.name)} is out</h2><p>Who knocked them out?<br><span class="mut sm">Pick everyone involved if it was a shared knockout. They split the bounty.</span></p><div class="chips">${o.map(x=>`<button class="kb ${bsel.includes(x.id)?'on':''}" aria-pressed="${bsel.includes(x.id)}" onclick="togK(${id},${x.id})">${esc(x.name)}</button>`).join('')}</div><p class="sm" style="min-height:1.4em">${info}</p><div class="row"><button class="g" ${n||!S.locked?'':'disabled'} onclick="bust(${id},bsel.slice())">Confirm</button><button onclick="closeM()">Cancel</button></div>`)}
+function togK(id,k){const i=bsel.indexOf(k);i<0?bsel.push(k):bsel.splice(i,1);bustUI(id,1)}
+function bust(id,ks){closeM();const p=P_(id),k=(ks||[]).map(P_).filter(Boolean);let cid=0;act(()=>{p.out=true;p.t=++S.bseq;S.elims++;k.forEach(x=>{x.el++;if(S.locked)x.el2=(x.el2||0)+1});if(S.locked&&k.length){cid=S.cid++;S.claims.push({id:cid,ks:k.map(x=>x.id),vic:p.name})}log(p.name+' eliminated'+(k.length?' by '+nlist(k.map(x=>x.name)):''));if(S.locked&&alive().length===1){pause();S.tEnd=Date.now()}});if(cid)drawUI(cid)}
+function drawUI(cid){const c=S.claims.find(x=>x.id==cid);if(!c||!S.envs.length)return;const ks=c.ks.map(P_).filter(Boolean),n=ks.length;modal(`<h2>${esc(nlist(ks.map(k=>k.name)))}: pick a bounty</h2>${n>1?`<p class="mut">Shared knockout${c.vic?' of '+esc(c.vic):''}: the bounty is split ${n} ways.</p>`:''}<button class="g" onclick="vdraw(${cid})">Random draw</button><p class="mut">Or choose an envelope yourself:</p><div class="chips">${S.envs.map((_,i)=>`<button class="pk" title="Envelope ${i+1}" aria-label="Envelope ${i+1}" onclick="pick(${cid})">✉</button>`).join('')}</div><div class="row"><button onclick="closeM()">Later</button></div>`)}
+function claim(cid,v,pk){closeM();const c=S.claims.find(x=>x.id==cid);if(!c||!S.envs.length)return;const ks=c.ks.map(P_).filter(Boolean);act(()=>{const cnt=S.envs.length,n=ks.length,tot=Math.round(v*100),base=Math.floor(tot/n),extra=tot-base*n;S.envs.splice(S.envs.indexOf(v),1);S.claims=S.claims.filter(x=>x.id!=cid);ks.forEach((k,j)=>{k.bw=Math.round(k.bw*100+base+(j<extra?1:0))/100});const nm=nlist(ks.map(k=>k.name));S.draws.push({n:nm,v,s:n});S.rseq++;S.last={n:nm,v,c:cnt,p:pk?1:0,s:n};log(nm+' drew '+E(v)+(n>1?' (split '+n+' ways)':''))});reveal(S.last)}
+const rnd=()=>S.envs[Math.floor(Math.random()*S.envs.length)];
+function vdraw(cid){claim(cid,rnd(),0)}
+function pick(cid){claim(cid,rnd(),1)}
+/* bounty builder */
+const cents=x=>Math.round(x*100),tiersOf=l=>{const m=new Map();l.forEach(v=>m.set(v,(m.get(v)||0)+1));return[...m].map(([v,c])=>({v,c}))};
+function lockUI(){if(alive().length<2)return;bd=tiersOf(gen());bdShow()}
+function bdShow(){const n=alive().length-1;modal(`<h2>Close rebuys &amp; set bounties</h2><p>${alive().length} players left, so <b>${n}</b> envelopes to fill with a pot of <b>${E(bpot())}</b>.</p><div class="bd">${bd.map((r,i)=>`<div class="bdr"><label class="bde">€<input type="number" min="0" step="0.5" value="${r.v}" aria-label="Envelope amount" oninput="bdSet(${i},this.value)"></label><span class="x">×</span><span class="stp"><button aria-label="One fewer" onclick="bdC(${i},-1)">−</button><b>${r.c}</b><button aria-label="One more" onclick="bdC(${i},1)">+</button></span><button aria-label="Remove this amount" onclick="bdDel(${i})">✕</button></div>`).join('')||'<p class="mut sm">No envelopes yet. Add an amount or auto-fill.</p>'}</div><div class="row"><button onclick="bdAdd()">+ Add amount</button><button onclick="bdFill(0)">Auto-fill: random mix</button><button onclick="bdFill(1)">Auto-fill: even</button></div><p id="bds" class="bds"></p><p class="mut sm">Rebuys and new players close. Anyone eliminated from now on draws an envelope. A €0 envelope is an empty one.</p><div class="row"><button class="g" id="bdgo" onclick="bdGo()">Close rebuys</button><button onclick="closeM()">Cancel</button></div>`);bdStat()}
+function bdStat(){const n=alive().length-1,P=cents(bpot()),k=bd.reduce((a,r)=>a+r.c,0),t=bd.reduce((a,r)=>a+cents(r.v)*r.c,0),dk=n-k,dt=P-t,okK=dk===0,okT=dt===0,el=$('#bds');if(!el)return;el.innerHTML=`<span class="${okK?'pos':'neg'}">${okK?'✓':'✗'} ${k} / ${n} envelopes${dk>0?' (add '+dk+')':dk<0?' ('+(-dk)+' too many)':''}</span><br><span class="${okT?'pos':'neg'}">${okT?'✓':'✗'} ${E(t/100)} / ${E(P/100)} total${dt>0?' ('+E(dt/100)+' left to assign)':dt<0?' ('+E(-dt/100)+' over)':''}</span>`;const go=$('#bdgo');if(go)go.disabled=!(okK&&okT)}
+function bdSet(i,v){bd[i].v=Math.max(0,parseFloat(v)||0);bdStat()}
+function bdC(i,d){bd[i].c=Math.max(1,bd[i].c+d);bdShow()}
+function bdDel(i){bd.splice(i,1);bdShow()}
+function bdAdd(){const n=alive().length-1,k=bd.reduce((a,r)=>a+r.c,0),t=bd.reduce((a,r)=>a+cents(r.v)*r.c,0),rem=n-k;bd.push({v:rem>0?Math.max(0,Math.round((cents(bpot())-t)/100/rem*2)/2):0,c:1});bdShow()}
+function bdFill(even){bd=tiersOf(gen(even));bdShow()}
+function bdGo(){const n=alive().length-1,l=[];bd.forEach(r=>{for(let i=0;i<r.c;i++)l.push(Math.round(r.v*100)/100)});if(l.length!==n||l.reduce((a,v)=>a+cents(v),0)!==cents(bpot()))return;l.sort((a,b)=>b-a);act(()=>{S.locked=true;S.envs=[...l];S.all=[...l];log('Rebuys closed: '+l.length+' bounties set')});closeM()}
+function settleUI(){const po=payouts(),rows=S.players.map(p=>{const pl=place(p),pay=pl&&pl<=3?po[pl-1]:0,paid=S.cfg.buy+p.re*S.cfg.re;return{p,paid,pay,net:pay+p.bw-paid}}).sort((a,b)=>b.net-a.net);modal(`<h2>Settle up</h2><table><tr><th>Player</th><th>Paid in</th><th>Prize</th><th>Bounties</th><th>Net</th></tr>${rows.map(r=>`<tr><td>${esc(r.p.name)}</td><td>${E(r.paid)}</td><td>${E(r.pay)}</td><td>${E(r.p.bw)}</td><td class="${r.net>=0?'pos':'neg'}">${r.net>=0?'+':'−'}${E(Math.abs(r.net))}</td></tr>`).join('')}</table><p class="mut sm">Provisional until the tournament is over.</p><div class="row"><button onclick="closeM()">Close</button></div>`)}
+/* presets */
+const NUMK=['buy','re','bBuy','bRe','third','split','min','stack'],PKEY='pokernight_presets_v1';
+const TURBO={buy:15,re:7.5,bBuy:5,bRe:2.5,third:15,split:60,min:10,stack:25000,maxRe:1,reUnl:false,struct:`250/500
+500/1000
+750/1500
+1000/2000
+1500/3000
+break 10
+2000/4000
+3000/6000
+4000/8000
+5000/10000
+6000/12000
+break 10
+8000/16000
+10000/20000
+15000/30000
+20000/40000`};
+const normCfg=c=>{const d=fresh().cfg,o={};c=c||{};for(const k of NUMK.concat('maxRe')){const v=Number(c[k]);o[k]=c[k]!==undefined&&c[k]!==''&&isFinite(v)?v:d[k]}o.reUnl=c.reUnl===undefined?d.reUnl:!!c.reUnl;o.struct=typeof c.struct==='string'?c.struct:d.struct;return o};
+const cleanPreset=x=>x&&typeof x.name==='string'&&x.name.trim()&&x.cfg&&typeof x.cfg.struct==='string'?{name:x.name.trim(),cfg:normCfg(x.cfg)}:null;
+let PR=[],DIR=null,dirNeed=false,fdOpen=false;
+function savePresets(){if(SLAVE)return;try{localStorage.setItem(PKEY,JSON.stringify(PR))}catch(e){}}
+(function(){let a=null;try{a=JSON.parse(localStorage.getItem(PKEY))}catch(e){}if(Array.isArray(a))PR=a.map(x=>{const p=cleanPreset(x);if(p&&x.file)p.file=x.file;return p}).filter(Boolean);else if(!SLAVE){PR=[{name:'Deep stack',cfg:normCfg(S.cfg)},{name:'Turbo',cfg:normCfg(TURBO)}];savePresets()}})();
+const sumry=c=>E(c.buy)+' buy-in · '+c.min+' min levels · '+N(c.stack)+' chips · '+(c.reUnl?'unlimited rebuys':c.maxRe?c.maxRe+(c.maxRe==1?' rebuy':' rebuys'):'no rebuys');
+function readForm(){if(!$('#c_buy'))return{...S.cfg};const d={};for(const k of NUMK)d[k]=+$('#c_'+k).value;d.maxRe=Math.max(0,Math.floor(+$('#c_maxRe').value||0));d.reUnl=$('#c_reUnl').checked;d.struct=$('#c_struct').value;return d}
+function applyCfg(d,reset){act(()=>{S.cfg=normCfg(d);const L=levels();if(S.lvl>=L.length||(reset&&!S.started))S.lvl=0;if(!S.started&&L[S.lvl])S.remMs=L[S.lvl].min*60000})}
+function setSave(){applyCfg(readForm());closeM()}
+function setUI(d){const c=d||S.cfg,key=x=>JSON.stringify(normCfg(x)),cur=key(S.cfg),unl=!!c.reUnl;
+modal(`<h2>Settings</h2><div class="pre"><h3 class="hh"><span>Tournament presets</span></h3>${PR.map((p,i)=>{const on=key(p.cfg)===cur;return`<div class="prow ${on?'on':''}"><div><b>${esc(p.name)}</b>${on?'<span class="tag">Active</span>':''}<div class="mut sm">${esc(sumry(p.cfg))}</div></div><button onclick="presetLoad(${i})">Load</button><button class="r" aria-label="Delete preset ${esc(p.name)}" onclick="presetDel(${i})">✕</button></div>`}).join('')||'<p class="mut sm">No presets saved yet.</p>'}<div class="row"><input id="pn" placeholder="Name for a new preset" style="flex:1;min-width:140px"><button class="g" onclick="presetSave()">Save as preset</button></div><p class="mut sm" style="margin:6px 0 0">Saves the settings below as a preset and applies them. Using an existing name overwrites that preset.</p>${folderUI()}</div>
+<div class="fm">${[['buy','Buy-in €'],['re','Rebuy €'],['bBuy','Bounty cut per buy-in €'],['bRe','Bounty cut per rebuy €'],['third','3rd place €'],['split','1st share of the rest %'],['min','Default level minutes'],['stack','Starting stack (chips)']].map(([k,l])=>`<label>${l}<input id="c_${k}" type="number" step="any" value="${c[k]}"></label>`).join('')}</div>
+<div class="rbx"><label>Max rebuys per player<input id="c_maxRe" type="number" min="0" step="1" value="${c.maxRe}" ${unl?'disabled':''}></label><label class="chk"><input id="c_reUnl" type="checkbox" ${unl?'checked':''} onchange="$('#c_maxRe').disabled=this.checked"> Unlimited rebuys</label></div>
+<label>Blind structure: one line each, <code>sb/bb [minutes]</code> or <code>break [minutes]</code><textarea id="c_struct" rows="10">${esc(c.struct)}</textarea></label><div class="row"><button class="g" onclick="setSave()">Save</button><button onclick="newT()">New tournament</button><button class="r" onclick="if(confirm('Reset everything, including settings?')){S=fresh();undo=[];save();closeM();render()}">Reset all</button><button onclick="closeM()">Close</button></div>`)}
+function newT(){if(!confirm('Start a new tournament? Players, bounties and the timer are cleared. Your settings are kept.'))return;const c=S.cfg;S=fresh();S.cfg=c;const L=levels();S.remMs=(L[0]?L[0].min:c.min)*60000;undo=[];save();closeM();render()}
+function presetLoad(i){const p=PR[i];if(!p)return;if((S.started||S.players.length)&&!confirm('Load "'+p.name+'"? The tournament is already under way, so this changes its buy-ins and blinds.'))return;applyCfg(p.cfg,1);closeM()}
+function presetDel(i){const p=PR[i];if(!p||!confirm('Delete the preset "'+p.name+'"?'))return;PR.splice(i,1);savePresets();dirDel(p);setUI(readForm())}
+function presetSave(){const nm=$('#pn').value.trim();if(!nm){alert('Give the preset a name first.');return}const d=normCfg(readForm()),i=PR.findIndex(x=>x.name.toLowerCase()===nm.toLowerCase());if(i>=0&&!confirm('Overwrite the preset "'+PR[i].name+'"?'))return;const p={name:i>=0?PR[i].name:nm,cfg:d};if(i>=0&&PR[i].file)p.file=PR[i].file;if(i>=0)PR[i]=p;else PR.push(p);savePresets();dirPut(p);applyCfg(d);setUI()}
+function presetExport(){fdOpen=true;const b=new Blob([JSON.stringify({presets:PR.map(({name,cfg})=>({name,cfg}))},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='poker-night-presets.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+async function presetImport(fs){fdOpen=true;let n=0;for(const f of fs){try{const j=JSON.parse(await f.text());for(const x of(Array.isArray(j)?j:j.presets||[j])){const p=cleanPreset(x);if(!p)continue;const i=PR.findIndex(y=>y.name.toLowerCase()===p.name.toLowerCase());if(i>=0&&PR[i].file)p.file=PR[i].file;if(i>=0)PR[i]=p;else PR.push(p);dirPut(p);n++}}catch(e){}}savePresets();alert(n?'Imported '+n+' preset'+(n>1?'s':'')+'.':'No presets found in that file.');setUI(readForm())}
+/* optional folder sync (Chrome / Edge): presets live as .json files in a folder the user picks */
+const idb=(m,k,v)=>new Promise((ok,no)=>{const r=indexedDB.open('pokernight',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onerror=()=>no(r.error);r.onsuccess=()=>{const db=r.result,tx=db.transaction('kv',m==='get'?'readonly':'readwrite'),st=tx.objectStore('kv'),q=m==='get'?st.get(k):m==='set'?st.put(v,k):st.delete(k);tx.oncomplete=()=>{db.close();ok(q.result)};tx.onerror=()=>no(tx.error)}});
+const slug=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'preset',dirOK=()=>DIR&&!dirNeed;
+async function dirPut(p){if(!dirOK())return;try{const f=p.file||slug(p.name)+'.json',h=await DIR.getFileHandle(f,{create:true}),w=await h.createWritable();await w.write(JSON.stringify({name:p.name,cfg:p.cfg},null,2));await w.close();if(p.file!==f){p.file=f;savePresets()}}catch(e){}}
+async function dirDel(p){if(!dirOK())return;try{await DIR.removeEntry(p.file||slug(p.name)+'.json')}catch(e){}}
+async function dirSync(){const seen=new Set();for await(const[n,h]of DIR.entries()){if(h.kind!=='file'||!/\.json$/i.test(n))continue;try{const j=JSON.parse(await(await h.getFile()).text()),arr=Array.isArray(j)?j:j.presets||[j];for(const x of arr){const p=cleanPreset(x);if(!p)continue;if(arr.length===1)p.file=n;seen.add(p.name.toLowerCase());const i=PR.findIndex(y=>y.name.toLowerCase()===p.name.toLowerCase());if(i>=0)PR[i]=p;else PR.push(p)}}catch(e){}}savePresets();for(const p of PR)if(!seen.has(p.name.toLowerCase()))await dirPut(p)}
+async function dirInit(){if(SLAVE||!window.showDirectoryPicker||!window.indexedDB)return;try{DIR=await idb('get','dir')||null;if(!DIR)return;if(await DIR.queryPermission({mode:'readwrite'})==='granted')await dirSync();else dirNeed=true}catch(e){DIR=null}}
+async function linkDir(){fdOpen=true;try{const h=await window.showDirectoryPicker({id:'pokernight',mode:'readwrite'});DIR=h;dirNeed=false;await idb('set','dir',h);await dirSync()}catch(e){if(e.name!=='AbortError')alert('Could not use that folder: '+e.message)}setUI(readForm())}
+async function reconnect(){fdOpen=true;try{if(await DIR.requestPermission({mode:'readwrite'})==='granted'){dirNeed=false;await dirSync()}}catch(e){alert('Could not reconnect: '+e.message)}setUI(readForm())}
+async function unlinkDir(){fdOpen=true;DIR=null;dirNeed=false;try{await idb('del','dir')}catch(e){}setUI(readForm())}
+function folderUI(){if(SLAVE)return'';const fl=!window.showDirectoryPicker?'<span class="mut sm">Folder sync needs Chrome or Edge on a computer.</span>':!DIR?'<button onclick="linkDir()">Link a folder…</button><span class="mut sm">Pick the folder next to this page and presets are kept in it as files.</span>':dirNeed?`<button class="g" onclick="reconnect()">Reconnect “${esc(DIR.name)}”</button>`:`<span class="sm">Synced with folder <b>${esc(DIR.name)}</b></span><button onclick="unlinkDir()">Unlink</button>`;return`<details ${fdOpen?'open':''}><summary>Folder &amp; sharing</summary><div class="row">${fl}</div><div class="row"><button onclick="presetExport()">Export all…</button><button onclick="$('#pimp').click()">Import…</button><input id="pimp" type="file" accept=".json,application/json" multiple hidden onchange="presetImport(this.files)"></div></details>`}
+function modal(h){$('#m .mb').innerHTML=h;$('#m').className='on'}function closeM(){$('#m').className=''}
+/* reveal */
+function conf(o){const c=['#e3b94f','#d8443a','#6fe3a0','#fff','#7ab8ff'];o.insertAdjacentHTML('beforeend',Array.from({length:70},()=>`<i class="cf" style="--x:${Math.random()*100};--d:${2+Math.random()*2}s;--c:${c[Math.random()*5|0]}"></i>`).join(''))}
+function reveal(L){if(!L)return;const o=$('#rv'),c=Math.min(L.c,10),T=(f,ms)=>rt.push(setTimeout(f,ms));rt.forEach(clearTimeout);rt=[];o.className='on';
+o.innerHTML=`<div class="rvn">${esc(L.n)} ${L.s>1?(L.p?'pick an envelope…':'draw…'):(L.p?'picks an envelope…':'draws…')}</div><div id="fan">${Array.from({length:c},(_,i)=>`<div class="env sh" style="--i:${i};--n:${c}"><div class="flap"></div></div>`).join('')}</div><button class="skip" onclick="endRv()">Skip</button>`;const BIG=`<div class="env big" id="be"><div class="flap"></div><div class="card"><span class="num">${E(L.v)}</span></div></div>`,B=L.p?0:2400,O=B+3700,go=()=>{$('#fan').outerHTML=BIG;o.classList.add('tense');[0,.7,1.3,1.8,2.2,2.5,2.75,2.95,3.1].forEach(t=>tone(65,t,.2,'sine',.35));for(let i=0;i<32;i++)tone(180+i*18,i*.1,.12,'triangle',.05)};
+if(L.p)go();else{drum();T(()=>$('#fan').classList.add('hush'),1700);T(go,B)}
+T(()=>{$('#be').classList.add('peek');tone(220,0,.5,'sawtooth',.05);tone(233,.05,.5,'sawtooth',.04)},B+2000);T(()=>$('#be').classList.remove('peek'),B+3100);
+T(()=>{$('#be').classList.add('open');for(let i=0;i<34;i++)tone(300+i*14,i*.1,.12,'triangle',.05)},O);
+T(()=>$('#be').classList.add('rev'),O+2800);
+T(()=>{o.classList.remove('tense');$('#be').classList.add(L.v>=7.5?'win':L.v===0?'zero':'ok');if(L.v>=7.5){[523,659,784,1047,1319].forEach((f,i)=>tone(f,i*.12,.5,'square',.08));conf(o)}else if(L.v===0)[392,370,349,311].forEach((f,i)=>tone(f,i*.35,.4,'sawtooth',.1));else tone(784,0,.5)},O+3500);
+T(()=>o.insertAdjacentHTML('beforeend',`<div class="rvv">${L.v===0?'Empty envelope. Better luck next time.':L.s>1?E(L.v)+' split '+L.s+' ways, '+E(Math.floor(L.v*100/L.s)/100)+' each':'+'+E(L.v)}</div>`),O+4300);T(endRv,O+10500)}
+function endRv(){rt.forEach(clearTimeout);$('#rv').className=''}
+/* render */
+function render(){const L=levels(),cur=L[S.lvl]||{},nx=L[S.lvl+1],R=S.cfg,al=alive(),over=S.locked&&al.length===1,po=payouts(),lvn=L.slice(0,S.lvl+1).filter(x=>!x.brk).length,ent=S.players.length+reb();
+const nm=x=>!x?'Final level':x.brk?'Break, '+x.min+' min':N(x.sb)+' / '+N(x.bb);
+const winner=over?al[0]:null;
+const bl=cur.brk?L.slice(S.lvl+1).find(x=>!x.brk):cur,avg=al.length?Math.round(ent*(R.stack||100000)/al.length):0,abb=bl&&bl.bb&&avg?avg/bl.bb:0;
+const tiers=[...new Set(S.all)].sort((a,b)=>b-a);
+const names=[1,2,3].map(n=>S.players.find(p=>place(p)===n));
+$('#app').innerHTML=`<div class="bar"><div class="tot">Total time<b id="tot">0:00:00</b></div><span class="host bar"><button onclick="toggleTV()">TV mode (T)</button><button onclick="window.open(location.href.split('#')[0]+'#tv','tv','width=1280,height=720')">Open TV window</button><button onclick="settleUI()">Settle up</button><button onclick="setUI()">Settings</button></span></div>
+${winner?`<div class="win-banner">${esc(winner.name)} wins ${E(po[0])}</div>`:''}
+<div class="grid"><div class="panel timer span"><div class="tmain"><div id="clock">00:00</div><div class="tinfo"><div class="lv">${cur.brk?'Break':'Level '+lvn}${S.running?'':'  ·  paused'}</div><div class="blinds">${cur.brk?'Break time':N(cur.sb||0)+' / '+N(cur.bb||0)}</div><div class="next">Next: ${nm(nx)}</div></div></div>
+<div class="ctl host"><button onclick="skip(-1)">◀ Prev</button><button onclick="adj(-60000)">−1 min</button><button class="g" onclick="toggle()">${S.running?'Pause':'Start'}</button><button onclick="adj(60000)">+1 min</button><button onclick="skip(1)">Next ▶</button><button onclick="doUndo()" ${undo.length?'':'disabled'}>Undo</button></div></div>
+<div class="panel"><div class="pl hd"><span>Player</span><span>Rebuys</span><span>Owes</span><span title="All eliminations">Elims</span><span title="Eliminations after rebuys closed">Post-rebuy</span><span>Bounties</span><span class="acts"></span></div>
+${S.players.map(p=>{const pl=place(p),mc=S.claims.filter(c=>c.ks.includes(p.id)),mx=maxRe();return`<div class="pl ${p.out?'out':''}"><span class="nm">${esc(p.name)}${pl&&(pl<=3)?' <span class="pip">'+ord(pl)+'</span>':p.out?' <span class="pip">out</span>':''}</span><span>${rbv(p)}</span><span>${E(R.buy+p.re*R.re)}</span><span>${p.el}</span><span>${p.el2||0}</span><span>${p.bw?E(p.bw):'-'}</span><span class="acts">${mc.length?`<button class="g" onclick="drawUI(${mc[0].id})">Draw${mc.length>1?' ×'+mc.length:''}</button>`:''}${!S.locked&&mx>0?`<button onclick="rebuy(${p.id})" ${p.re>=mx?'disabled title="No rebuys left"':''}>Rebuy</button>`:''}${!p.out&&al.length>1?`<button class="r" onclick="bustUI(${p.id})">Bust</button>`:''}${!S.locked?`<button onclick="rm(${p.id})">✕</button>`:''}</span></div>`}).join('')||'<p class="mut">No players yet. Add the first one below.</p>'}
+<div class="host row"><input id="np" placeholder="Player name" onkeydown="if(event.key==='Enter')addP()" ${S.locked?'disabled':''}><button class="g" onclick="addP()" ${S.locked?'disabled':''}>Add player</button></div>
+<p class="host mut sm">${S.log.slice(0,2).map(esc).join('<br>')}</p></div>
+<div class="side"><div class="panel"><div class="stats"><div class="stat">Players left<b>${S.locked||S.elims?al.length+' / '+S.players.length:S.players.length}</b></div><div class="stat">Entries<b>${ent}</b></div><div class="stat">Eliminations<b>${S.elims}</b></div><div class="stat">Avg stack<b>${avg?N(avg):'-'}${abb?' <span class="bbv">('+N(abb>=10?Math.round(abb):Math.round(abb*10)/10)+' BB)</span>':''}</b></div></div></div>
+<div class="panel pods"><h3 class="hh"><span>Prize pool</span><span>${E(pool())}</span></h3><div class="pod">${['1st','2nd','3rd'].map((l,i)=>`<div class="pc"><small>${l}</small><div class="pn">${names[i]?esc(names[i].name):'&nbsp;'}</div><b>${E(po[i])}</b></div>`).join('')}</div>${S.players.length>=3&&po[0]-po[1]<0?'<p class="neg sm">Pool too small for the 3rd place minimum.</p>':''}
+<div class="sep"><h3 class="hh"><span>Bounties</span><span class="mut sm">${S.locked?(S.all.length-S.envs.length)+' of '+S.all.length+' collected · ':''}pot ${E(bpot())}</span></h3>
+${S.locked?`<div class="chips">${tiers.map(v=>{const left=S.envs.filter(x=>x===v).length,tot=S.all.filter(x=>x===v).length;return`<span class="chip ${left?'':'gone'}">${E(v)} ×${left}${left<tot?'/'+tot:''}</span>`}).join('')}</div><p class="mut sm" style="margin:6px 0 0">${S.draws.map(d=>esc(d.n)+' '+E(d.v)+(d.s>1?' (split)':'')).join(' · ')||'No bounties drawn yet.'}</p>`:`<div class="brow"><span class="host"><button class="g" onclick="lockUI()" ${al.length<2?'disabled':''}>Close rebuys &amp; set bounties</button></span><span class="mut sm">Envelopes are set when rebuys close</span></div>`}</div></div></div></div>`;paint()}
+function rbv(p){const mx=maxRe(),u=p.re+' rebuy'+(p.re==1?'':'s');if(!mx)return'<span class="pip">–</span>';if(mx===Infinity||mx>6||p.re>mx)return p.re?`<span class="rb" title="${u}">↻ ${p.re}${mx===Infinity?'':' / '+mx}</span>`:'<span class="pip">–</span>';return`<span class="pips" role="img" title="${p.re} of ${mx} rebuys used" aria-label="${p.re} of ${mx} rebuys used">${Array.from({length:mx},(_,i)=>`<i class="pp ${i<p.re?'on':''}"></i>`).join('')}</span>`}
+function toggleTV(){document.body.classList.toggle('tv')}
+addEventListener('keydown',e=>{if(/INPUT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='t'||e.key==='T')toggleTV();if(e.key==='f'||e.key==='F')document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();if(e.key===' '&&!SLAVE){e.preventDefault();toggle()}});
+if(SLAVE){document.body.classList.add('tv');let seen=S.rseq;addEventListener('storage',e=>{if(e.key!==KEY)return;S=JSON.parse(e.newValue);if(S.rseq>seen){seen=S.rseq;reveal(S.last)}render()})}
+render();dirInit();
+</script></body></html>

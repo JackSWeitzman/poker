@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Poker League</title>
+<style>
+:root{--bg:#06231a;--panel:#0b3326;--line:#1f6a4e;--gold:#e3b94f;--tx:#f1f5ef;--mut:#86b39e}
+*{box-sizing:border-box}
+body{margin:0;padding:14px;min-height:100vh;color:var(--tx);font-family:"Trebuchet MS","Segoe UI",sans-serif;background:radial-gradient(ellipse at 50% -10%,#14604a,var(--bg) 65%)}
+h1,h2{font-family:Georgia,serif;color:var(--gold);margin:0 0 10px}
+main{max-width:900px;margin:0 auto}
+.top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+a{color:var(--gold)}
+.panel{background:rgba(7,38,28,.82);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px;overflow-x:auto}
+table{width:100%;border-collapse:collapse}td,th{padding:7px 6px;text-align:left;border-bottom:1px solid #14543d;white-space:nowrap}
+th{color:var(--mut);font-size:13px;font-weight:400}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.pos{color:#6fe3a0}.neg{color:#ff8b82}.mut{color:var(--mut)}.sm{font-size:13px}
+tr.dim td{opacity:.45}
+details{border-bottom:1px solid #14543d;padding:6px 0}summary{cursor:pointer}
+</style></head><body><main>
+<div class="top"><h1>Poker League</h1><a href="poker-night.html">Tournament tool →</a></div>
+<div id="app"><p class="mut">Loading…</p></div>
+<p class="mut sm">Points: 1st = players + 5, 2nd = players + 2, 3rd = players, others = players beaten. Plus 1 point per elimination after rebuys closed (shared knockouts split the point), plus any awards.</p>
+</main>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const m=v=>(v<0?'−':'')+'€'+Math.abs(v).toFixed(2);
+const f=v=>+v.toFixed(2);
+function placePts(pl,n){return pl===1?n+5:pl===2?n+2:pl===3?n:n-pl}
+function build(D){
+  const al={};for(const k in D.aliases||{})(D.aliases[k]||[]).forEach(a=>al[a.toLowerCase()]=k);
+  const id=n=>al[n.toLowerCase()]||n,P={},nights=[];
+  for(const N of D.nights){
+    const n=N.players.length,rows=N.players.map(p=>{const aw=(N.awards||[]).filter(a=>id(a.player)===id(p.name)).reduce((s,a)=>s+(+a.points||0),0),pp=placePts(p.place,n),pts=pp+p.hardElims+aw;
+      return{name:id(p.name),place:p.place,pts,net:p.net,he:p.hardElims}});
+    nights.push({date:N.date,preset:N.preset,rows});
+    for(const r of rows){const s=P[r.name]=P[r.name]||{name:r.name,nights:0,pts:0,net:0,wins:0,he:0};s.nights++;s.pts+=r.pts;s.net+=r.net;s.he+=r.he;if(r.place===1)s.wins++}
+  }
+  const S=D.settings||{},need=Math.max(S.minNights||3,Math.ceil((S.minShare||.5)*nights.length));
+  const all=Object.values(P).map(p=>({...p,ppn:p.pts/p.nights,q:p.nights>=need}));
+  all.sort((a,b)=>b.q-a.q||(b.q?b.ppn-a.ppn:b.pts-a.pts));
+  return{all,nights,need}
+}
+fetch('league.json',{cache:'no-cache'}).then(r=>r.json()).then(D=>{
+  const{all,nights,need}=build(D);
+  if(!nights.length){$('#app').innerHTML='<div class="panel"><h2>No nights yet</h2><p class="mut">Finish a tournament, use Settle up → Export for league, and paste the result into league.json.</p></div>';return}
+  let r=0;
+  $('#app').innerHTML=`<div class="panel"><h2>Standings</h2><table><tr><th>#</th><th>Player</th><th class="n">Pts/night</th><th class="n">Points</th><th class="n">Nights</th><th class="n">Wins</th><th class="n" title="Eliminations after rebuys closed; shared knockouts are split">Hard Elims</th><th class="n">PNL</th></tr>${all.map(p=>`<tr class="${p.q?'':'dim'}"><td>${p.q?++r:'–'}</td><td><b>${esc(p.name)}</b></td><td class="n">${f(p.ppn)}</td><td class="n">${f(p.pts)}</td><td class="n">${p.nights}</td><td class="n">${p.wins}</td><td class="n">${f(p.he)}</td><td class="n ${p.net>=0?'pos':'neg'}">${p.net>=0?'+':''}${m(p.net)}</td></tr>`).join('')}</table><p class="mut sm">Ranked by points per night. Play at least ${need} night${need==1?'':'s'} to qualify; greyed-out players have not yet.</p></div>
+<div class="panel"><h2>Nights</h2>${nights.slice().reverse().map(n=>`<details><summary>${esc(n.date)} <span class="mut">· ${esc(n.preset||'')} · ${n.rows.length} players</span></summary><table><tr><th>Place</th><th>Player</th><th class="n">Points</th><th class="n">PNL</th></tr>${n.rows.map(x=>`<tr><td>${x.place}</td><td>${esc(x.name)}</td><td class="n">${f(x.pts)}</td><td class="n ${x.net>=0?'pos':'neg'}">${x.net>=0?'+':''}${m(x.net)}</td></tr>`).join('')}</table></details>`).join('')}</div>`
+}).catch(e=>{$('#app').innerHTML='<div class="panel"><p class="neg">Could not load league.json. This page needs to be served from GitHub Pages or a local server, not opened as a file.</p></div>'});
+</script></body></html>
