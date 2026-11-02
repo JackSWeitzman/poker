@@ -192,6 +192,66 @@
         { "type": "bust", "at": 1793405542470, "lvl": 9, "blinds": "4000/8000", "p": "Nick", "by": ["Daithi"], "hard": true },
         { "type": "bust", "at": 1793405791205, "lvl": 10, "blinds": "5000/10000", "p": "Ruairc", "by": ["Daithi"], "hard": true }
       ]
+    },
+    {
+      "date": "2026-11-01",
+      "preset": "Custom",
+      "players": [
+        { "name": "Jack", "place": 1, "rebuys": 0, "paid": 15, "prize": 51.5, "bounties": 10.5, "net": 47, "elims": 3, "preElims": 0, "postElims": 3, "hardElims": 3 },
+        { "name": "Cian", "place": 2, "rebuys": 1, "paid": 22.5, "prize": 28, "bounties": 0, "net": 5.5, "elims": 3, "preElims": 1, "postElims": 2, "hardElims": 2 },
+        { "name": "Daithi", "place": 3, "rebuys": 0, "paid": 15, "prize": 15, "bounties": 0, "net": 0, "elims": 0, "preElims": 0, "postElims": 0, "hardElims": 0 },
+        { "name": "Nick", "place": 4, "rebuys": 0, "paid": 15, "prize": 0, "bounties": 0, "net": -15, "elims": 0, "preElims": 0, "postElims": 0, "hardElims": 0 },
+        { "name": "Nurley", "place": 5, "rebuys": 0, "paid": 15, "prize": 0, "bounties": 0, "net": -15, "elims": 0, "preElims": 0, "postElims": 0, "hardElims": 0 },
+        { "name": "Ruairc", "place": 6, "rebuys": 1, "paid": 22.5, "prize": 0, "bounties": 0, "net": -22.5, "elims": 1, "preElims": 1, "postElims": 0, "hardElims": 0 }
+      ],
+      "awards": [],
+      "startedAt": "2026-11-01T21:03:46.571Z",
+      "endedAt": "2026-11-01T23:22:59.946Z",
+      "durationMin": 139,
+      "entries": 8,
+      "prizePool": 94.5,
+      "bountyPool": 10.5,
+      "bountyEnvelopes": [10.5, 0, 0, 0, 0],
+      "settings": {
+        "buy": 15,
+        "re": 7.5,
+        "bBuy": 1.5,
+        "bRe": 0.75,
+        "third": 15,
+        "split": 65,
+        "min": 5,
+        "stack": 20000,
+        "maxRe": 1,
+        "reUnl": true
+      },
+      "structure": [
+        "100/200", "200/400", "300/600", "400/800", "Break",
+        "500/1000", "1000/2000", "2000/4000", "3000/6000", "4000/8000",
+        "5000/10000", "10000/20000", "15000/30000", "20000/40000",
+        "30000/60000", "40000/80000", "50000/100000"
+      ],
+      "events": [
+        { "type": "join", "at": 1793564145833, "lvl": 1, "blinds": "100/200", "p": "Jack" },
+        { "type": "join", "at": 1793564147724, "lvl": 1, "blinds": "100/200", "p": "Nurley" },
+        { "type": "join", "at": 1793564149101, "lvl": 1, "blinds": "100/200", "p": "Ciabn" },
+        { "type": "join", "at": 1793564153894, "lvl": 1, "blinds": "100/200", "p": "Cian" },
+        { "type": "join", "at": 1793564155910, "lvl": 1, "blinds": "100/200", "p": "Nick" },
+        { "type": "join", "at": 1793564157573, "lvl": 1, "blinds": "100/200", "p": "Daithi" },
+        { "type": "join", "at": 1793564932441, "lvl": 1, "blinds": "100/200", "p": "Ruairc" },
+        { "type": "bust", "at": 1793569338673, "lvl": 3, "blinds": "300/600", "p": "Cian", "by": ["Ruairc"], "hard": false },
+        { "type": "rebuy", "at": 1793569340231, "lvl": 3, "blinds": "300/600", "p": "Cian", "n": 1 },
+        { "type": "bust", "at": 1793571050765, "lvl": null, "blinds": "break", "p": "Ruairc", "by": ["Cian"], "hard": false },
+        { "type": "rebuy", "at": 1793571052281, "lvl": null, "blinds": "break", "p": "Ruairc", "n": 1 },
+        { "type": "rebuysClosed", "at": 1793571419810, "lvl": 5, "blinds": "500/1000", "bounties": 5 },
+        { "type": "bust", "at": 1793572168019, "lvl": 5, "blinds": "500/1000", "p": "Ruairc", "by": ["Jack"], "hard": true },
+        { "type": "bounty", "at": 1793572169211, "lvl": 5, "blinds": "500/1000", "by": ["Jack"], "victim": "Ruairc", "v": 10.5, "split": 1 },
+        { "type": "bust", "at": 1793572343957, "lvl": 5, "blinds": "500/1000", "p": "Nurley", "by": ["Cian"], "hard": true },
+        { "type": "bounty", "at": 1793572344874, "lvl": 5, "blinds": "500/1000", "by": ["Cian"], "victim": "Nurley", "v": 0, "split": 1 },
+        { "type": "bust", "at": 1793574438436, "lvl": 8, "blinds": "3000/6000", "p": "Nick", "by": ["Cian"], "hard": true },
+        { "type": "bust", "at": 1793574679774, "lvl": 8, "blinds": "3000/6000", "p": "Daithi", "by": ["Jack"], "hard": true },
+        { "type": "bounty", "at": 1793574681346, "lvl": 8, "blinds": "3000/6000", "by": ["Jack"], "victim": "Daithi", "v": 0, "split": 1 },
+        { "type": "bust", "at": 1793575379946, "lvl": 11, "blinds": "10000/20000", "p": "Cian", "by": ["Jack"], "hard": true }
+      ]
     }
   ]
 }
