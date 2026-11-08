@@ -252,6 +252,68 @@
         { "type": "bounty", "at": 1793574681346, "lvl": 8, "blinds": "3000/6000", "by": ["Jack"], "victim": "Daithi", "v": 0, "split": 1 },
         { "type": "bust", "at": 1793575379946, "lvl": 11, "blinds": "10000/20000", "p": "Cian", "by": ["Jack"], "hard": true }
       ]
+    },
+    {
+      "date": "2026-11-08",
+      "preset": "Custom",
+      "players": [
+        { "name": "Nurley", "place": 1, "rebuys": 0, "paid": 15, "prize": 70, "bounties": 0, "net": 55, "elims": 7, "preElims": 3, "postElims": 4, "hardElims": 4 },
+        { "name": "Daithi", "place": 2, "rebuys": 1, "paid": 22.5, "prize": 40, "bounties": 0, "net": 17.5, "elims": 0, "preElims": 0, "postElims": 0, "hardElims": 0 },
+        { "name": "Oisin", "place": 3, "rebuys": 0, "paid": 15, "prize": 17.5, "bounties": 0, "net": 2.5, "elims": 0, "preElims": 0, "postElims": 0, "hardElims": 0 },
+        { "name": "Cian", "place": 4, "rebuys": 2, "paid": 30, "prize": 0, "bounties": 0, "net": -30, "elims": 1, "preElims": 0, "postElims": 1, "hardElims": 1 },
+        { "name": "Ruairc", "place": 5, "rebuys": 2, "paid": 30, "prize": 0, "bounties": 0, "net": -30, "elims": 1, "preElims": 1, "postElims": 0, "hardElims": 0 },
+        { "name": "Jack", "place": 6, "rebuys": 0, "paid": 15, "prize": 0, "bounties": 0, "net": -15, "elims": 1, "preElims": 1, "postElims": 0, "hardElims": 0 }
+      ],
+      "awards": [],
+      "startedAt": "2026-11-08T20:57:58.510Z",
+      "endedAt": "2026-11-08T22:56:50.758Z",
+      "durationMin": 119,
+      "entries": 11,
+      "prizePool": 127.5,
+      "bountyPool": 0,
+      "bountyEnvelopes": [0, 0, 0, 0, 0],
+      "settings": {
+        "buy": 15,
+        "re": 7.5,
+        "bBuy": 0,
+        "bRe": 0,
+        "third": 17.5,
+        "split": 64,
+        "min": 7.5,
+        "stack": 20000,
+        "maxRe": 1,
+        "reUnl": true
+      },
+      "structure": [
+        "100/200", "200/400", "300/600", "400/800", "Break",
+        "500/1000", "1000/2000", "2000/4000", "3000/6000", "4000/8000",
+        "5000/10000", "10000/20000", "15000/30000", "20000/40000",
+        "30000/60000", "40000/80000", "50000/100000"
+      ],
+      "events": [
+        { "type": "join", "at": 1794171291462, "lvl": 1, "blinds": "100/200", "p": "Jack" },
+        { "type": "join", "at": 1794171292860, "lvl": 1, "blinds": "100/200", "p": "Ruairc" },
+        { "type": "join", "at": 1794171294091, "lvl": 1, "blinds": "100/200", "p": "Cian" },
+        { "type": "join", "at": 1794171295069, "lvl": 1, "blinds": "100/200", "p": "Daithi" },
+        { "type": "join", "at": 1794171296446, "lvl": 1, "blinds": "100/200", "p": "Oisin" },
+        { "type": "join", "at": 1794171298299, "lvl": 1, "blinds": "100/200", "p": "Nurley" },
+        { "type": "bust", "at": 1794171990224, "lvl": 1, "blinds": "100/200", "p": "Cian", "by": ["Ruairc"], "hard": false },
+        { "type": "rebuy", "at": 1794171990949, "lvl": 1, "blinds": "100/200", "p": "Cian", "n": 1 },
+        { "type": "bust", "at": 1794173121307, "lvl": 2, "blinds": "200/400", "p": "Ruairc", "by": ["Nurley"], "hard": false },
+        { "type": "rebuy", "at": 1794173122423, "lvl": 2, "blinds": "200/400", "p": "Ruairc", "n": 1 },
+        { "type": "bust", "at": 1794173936612, "lvl": 3, "blinds": "300/600", "p": "Cian", "by": ["Jack"], "hard": false },
+        { "type": "rebuy", "at": 1794173937612, "lvl": 3, "blinds": "300/600", "p": "Cian", "n": 2 },
+        { "type": "bust", "at": 1794174974020, "lvl": 4, "blinds": "400/800", "p": "Ruairc", "by": ["Nurley"], "hard": false },
+        { "type": "rebuy", "at": 1794174975537, "lvl": 4, "blinds": "400/800", "p": "Ruairc", "n": 2 },
+        { "type": "bust", "at": 1794175206114, "lvl": 4, "blinds": "400/800", "p": "Daithi", "by": ["Nurley"], "hard": false },
+        { "type": "rebuy", "at": 1794175207431, "lvl": 4, "blinds": "400/800", "p": "Daithi", "n": 1 },
+        { "type": "rebuysClosed", "at": 1794175758076, "lvl": 5, "blinds": "500/1000", "bounties": 5 },
+        { "type": "bust", "at": 1794176157653, "lvl": 5, "blinds": "500/1000", "p": "Jack", "by": ["Nurley"], "hard": true },
+        { "type": "bust", "at": 1794177443723, "lvl": 7, "blinds": "2000/4000", "p": "Ruairc", "by": ["Cian"], "hard": true },
+        { "type": "bust", "at": 1794177611197, "lvl": 7, "blinds": "2000/4000", "p": "Cian", "by": ["Nurley"], "hard": true },
+        { "type": "bust", "at": 1794178606612, "lvl": 8, "blinds": "3000/6000", "p": "Oisin", "by": ["Nurley"], "hard": true },
+        { "type": "bust", "at": 1794178610758, "lvl": 8, "blinds": "3000/6000", "p": "Daithi", "by": ["Nurley"], "hard": true }
+      ]
     }
   ]
 }
